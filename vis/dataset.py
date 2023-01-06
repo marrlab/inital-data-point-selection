@@ -8,7 +8,7 @@ def plot_per_class_samples(dataset, n=3):
     _, plots = plt.subplots(n, len(dataset.labels), figsize=(20,10))
 
     for label in dataset.labels:
-        data_indices = np.where(dataset.images_data['labels'] == label)
+        data_indices, _ = np.where(dataset.images_data['labels'] == label)
 
         for i in range(n):
             data_index = random.choice(data_indices)            
