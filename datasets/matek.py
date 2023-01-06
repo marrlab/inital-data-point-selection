@@ -83,6 +83,6 @@ class MatekDataset(torch.utils.data.Dataset):
             data_point['feature'] = self.features[self.images_data['names'][i]]
 
         return data_point
-        
+
     def __len__(self):
         return len(self.images_data['names'])
