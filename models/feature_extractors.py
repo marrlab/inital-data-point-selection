@@ -4,7 +4,7 @@ import torch
 import torchvision
 import numpy as np
 from tqdm import tqdm
-from helpers import Identity
+from models.helpers import Identity
 from torchvision import transforms
 from ctypes import ArgumentError
 
@@ -112,26 +112,26 @@ def compute_features(model, dataset, path, batch_size=32):
     print('started computing features')
     with tqdm(total=batches) as pbar:
         for i, batch in enumerate(data_loader):
-            output = model(batch['image'])
+            with torch.no_grad():
+              output = model(batch['image'])
 
             data['features'].extend(output.cpu().numpy())
             data['labels'].extend(batch['label'].cpu().numpy())
             data['names'].extend(batch['name'])
 
             if i == 0:
-                print(f'feature vector length: {len(data['features'][0])}')
+                print(f"feature vector length: {len(data['features'][0])}")
 
             pbar.update()
 
     print('creating csv file with features')
     with open(path, 'w') as csv_file:
         csv_writer = csv.writer(csv_file)
-        csv_writer.writerow(['name', 'label', 'label_text', 'feature'])
+        csv_writer.writerow(['name', 'label', 'feature'])
         for i in range(len(data['features'])):
             csv_writer.writerow([
                 data['names'][i],
                 data['labels'][i],
-                dataset.labels_text[data['labels'][i]],
                 data['features'][i].tolist()
             ])
 

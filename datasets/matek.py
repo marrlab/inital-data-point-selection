@@ -67,8 +67,6 @@ class MatekDataset(torch.utils.data.Dataset):
         data_point = {
             'label': self.images_data['labels'][i],
             'name': self.images_data['names'][i],
-            'image': None,
-            'feature': None
         }
 
         if self.load_images:
