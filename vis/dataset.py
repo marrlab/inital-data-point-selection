@@ -4,14 +4,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_per_class_samples(dataset, n=3):
+def plot_per_class_samples(dataset, n=5):
     _, plots = plt.subplots(n, len(dataset.labels), figsize=(20,10))
 
     for label in dataset.labels:
-        data_indices, _ = np.where(dataset.images_data['labels'] == label)
+        data_indices = np.where(np.array(dataset.images_data['labels']) == label)[0]
 
         for i in range(n):
-            data_index = random.choice(data_indices)            
+            data_index = random.choice(data_indices)    
             data_point = dataset[data_index]
 
             plot = plots[i][label]
@@ -21,7 +21,7 @@ def plot_per_class_samples(dataset, n=3):
             image -= image.min()
             image /= image.max()
 
-            plot.set_title(dataset.labels_text[data_point['label']])
+            plot.set_title(f"{dataset.labels_text[data_point['label']]} [{data_point['name']}]")
             plot.axis('off')
             plot.imshow(image)
 

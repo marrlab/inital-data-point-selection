@@ -4,6 +4,7 @@ import csv
 import torch
 import numpy as np
 from PIL import Image
+from torchvision import transforms
 
 class MatekDataset(torch.utils.data.Dataset):
     """
@@ -48,6 +49,8 @@ class MatekDataset(torch.utils.data.Dataset):
                 self.images_data['paths'].append(os.path.join(label_dir, f.name))
 
         self.preprocess = preprocess
+        if self.preprocess is None:
+            self.preprocess = transforms.ToTensor()
 
         # mapping from image name to feature
         self.features = None
