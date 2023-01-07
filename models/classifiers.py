@@ -14,7 +14,8 @@ def get_classifier_imagenet(architecture: str, num_classes: int) -> tuple:
             super(Classifier).__init__()
 
             self.model = model
-            self.fc = torch.nn.Linear(output_dim, num_classes, bias=False)
+            self.num_classes = num_classes
+            self.fc = torch.nn.Linear(output_dim, self.num_classes, bias=False)
             
         def forward(self, x):
             return self.fc(self.model(x))
