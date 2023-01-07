@@ -20,3 +20,8 @@ def get_classifier_imagenet(architecture: str, num_classes: int) -> tuple:
             return self.fc(self.model(x))
 
     return Classifier(), preprocess
+
+def get_classifier_imagenet_preprocess_only(architecture: str):
+    _, preprocess = get_feature_extractor_imagenet(architecture)
+
+    return preprocess
