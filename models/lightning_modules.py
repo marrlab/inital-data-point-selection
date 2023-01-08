@@ -4,7 +4,7 @@ import wandb
 import pytorch_lightning as pl
 from torchmetrics.functional import accuracy, confusion_matrix
 
-class ClassifierLightningModule(pl.LightningModule):
+class ImageClassifierLightningModule(pl.LightningModule):
     def __init__(self, model, num_classes, **kwargs):
         super().__init__()
 

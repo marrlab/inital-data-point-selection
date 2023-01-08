@@ -3,16 +3,19 @@ import torch
 import wandb
 import numpy as np
 import pytorch_lightning as pl
-from models.lightning_modules import ClassifierLightningModule
+from models.lightning_modules import ImageClassifierLightningModule
+from datasets.datasets import ImageDataset
 
-def train_image_classifier(model, train_dataset, val_dataset):
+def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, val_dataset: ImageDataset):
+    assert len(train_dataset.labels) == len(val_dataset.labels)
+
     train_data_loader = torch.utils.data.DataLoader(train_dataset, batch_size=wandb.config.batch_size, shuffle=True)
     batches = int(np.ceil(len(train_dataset) / wandb.config.batch_size))
 
     val_data_loader = torch.utils.data.DataLoader(val_dataset, batch_size=wandb.config.batch_size, shuffle=True)
     wandb_logger = wandb.WandbLogger()
 
-    lightning_model = ClassifierLightningModule(model, len(train_dataset.labels))
+    lightning_model = ImageClassifierLightningModule(model, len(train_dataset.labels))
     trainer = pl.Trainer(
         max_epochs=wandb.config.epochs,
         log_every_n_steps=5,
