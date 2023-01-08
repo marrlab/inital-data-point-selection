@@ -10,7 +10,9 @@ class ImageClassifierLightningModule(pl.LightningModule):
 
         self.model = model
         self.num_classes = num_classes
-        self.loss_fn = torch.nn.CrossEntropyLoss()
+        self.loss = torch.nn.CrossEntropyLoss()
+
+        self.save_hyperparameters()
 
     def forward(self, image):
         output = self.model(image)
@@ -24,10 +26,10 @@ class ImageClassifierLightningModule(pl.LightningModule):
         h, w = images.shape[2:]
         assert h % 32 == 0 and w % 32 == 0
 
-        logits = self.forward(images)
+        logits = self(images)
         preds = torch.argmax(logits, dim=1)
         
-        loss = self.loss_fn(logits, labels)
+        loss = self.loss(logits, labels)
 
         self.log('train_loss', loss)
         self.log('train_accuracy', accuracy(preds, labels, task='multiclass', num_classes=self.num_classes))
@@ -46,13 +48,13 @@ class ImageClassifierLightningModule(pl.LightningModule):
         logits = self.forward(images)
         preds = torch.argmax(logits, dim=1)
         
-        loss = self.loss_fn(logits, labels)
+        loss = self.loss(logits, labels)
 
         self.log('val_loss', loss)
         self.log('val_accuracy', accuracy(preds, labels, task='multiclass', num_classes=self.num_classes))
         # self.log('val_confusion_matrix', confusion_matrix(preds, label_ids, self.num_classes))
 
-        return loss
+        return preds
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=wandb.config.learning_rate)
