@@ -7,7 +7,7 @@ from PIL import Image
 from torchvision import transforms
 from utils.utils import delete_at_multiple_indices
 
-
+# abstract class
 class ImageDataset(torch.utils.data.Dataset):
     def __init__(
             self, 
@@ -71,7 +71,7 @@ class ImageDataset(torch.utils.data.Dataset):
     def relabel_dataset(self):
         labels_unique = np.array(sorted(list(set(self.images_data['labels']))))
 
-        self.labels_text = delete_at_multiple_indices(self.labels_text, labels_unique)
+        self.labels_text = np.delete(self.labels_text, labels_unique)
         self.labels = list(range(len(labels_unique)))
         self.labels_text_mapping = {text: id for id, text in enumerate(self.labels_text)} 
 
@@ -128,7 +128,4 @@ class MatekDataset(ImageDataset):
                     self.features[row['name']] = np.array([float(el) for el in row['feature'][1:-1].split(', ')])
 
         self.load_images = load_images
-    
-    
-
     
