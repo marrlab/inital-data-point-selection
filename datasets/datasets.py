@@ -5,7 +5,6 @@ import torch
 import numpy as np
 from PIL import Image
 from torchvision import transforms
-from utils.utils import delete_at_multiple_indices
 
 # abstract class
 class ImageDataset(torch.utils.data.Dataset):
@@ -69,9 +68,10 @@ class ImageDataset(torch.utils.data.Dataset):
     # restructures labeling, removing those for which there are no data points
     # e.g. possible lables [0, 1, 2, 3, 4], present labels [0, 3, 4], new labels [0, 1, 2]
     def relabel(self):
-        labels_unique = np.array(sorted(list(set(self.images_data['labels']))))
+        labels_unique = set(self.images_data['labels'])
+        labels_to_delete = list(set(range(len(self.labels))) - labels_unique)
 
-        self.labels_text = np.delete(self.labels_text, labels_unique)
+        self.labels_text = np.delete(self.labels_text, labels_to_delete)
         self.labels = list(range(len(labels_unique)))
         self.labels_text_mapping = {text: id for id, text in enumerate(self.labels_text)} 
 
@@ -91,6 +91,8 @@ class ImageDataset(torch.utils.data.Dataset):
                 del self.images_data['labels_text'][i]
                 del self.images_data['labels'][i]
                 del self.images_data['paths'][i]
+
+                continue
 
             self.images_data['labels'][i] = self.labels_text_mapping[self.images_data['labels_text'][i]]
 

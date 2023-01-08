@@ -13,7 +13,7 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
     batches = int(np.ceil(len(train_dataset) / wandb.config.batch_size))
 
     val_data_loader = torch.utils.data.DataLoader(val_dataset, batch_size=wandb.config.batch_size, shuffle=True)
-    wandb_logger = wandb.WandbLogger()
+    wandb_logger = pl.loggers.WandbLogger()
 
     lightning_model = ImageClassifierLightningModule(model, len(train_dataset.labels))
     trainer = pl.Trainer(

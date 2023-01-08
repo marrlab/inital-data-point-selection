@@ -30,7 +30,7 @@ class ImageClassifierLightningModule(pl.LightningModule):
         loss = self.loss_fn(logits, labels)
 
         self.log('train_loss', loss)
-        self.log('train_accuracy', accuracy(preds, labels))
+        self.log('train_accuracy', accuracy(preds, labels, task='multiclass', num_classes=self.num_classes))
         # self.log('train_confusion_matrix', confusion_matrix(preds, label_ids, self.num_classes))
 
         return loss
@@ -49,7 +49,7 @@ class ImageClassifierLightningModule(pl.LightningModule):
         loss = self.loss_fn(logits, labels)
 
         self.log('val_loss', loss)
-        self.log('val_accuracy', accuracy(preds, labels))
+        self.log('val_accuracy', accuracy(preds, labels, task='multiclass', num_classes=self.num_classes))
         # self.log('val_confusion_matrix', confusion_matrix(preds, label_ids, self.num_classes))
 
         return loss

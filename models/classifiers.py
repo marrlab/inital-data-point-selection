@@ -11,7 +11,7 @@ def get_classifier_imagenet(architecture: str, num_classes: int) -> tuple:
     # defining the classifier with the appended linear layer
     class Classifier(torch.nn.Module):
         def __init__(self):
-            super(Classifier).__init__()
+            super(Classifier, self).__init__()
 
             self.model = model
             self.num_classes = num_classes

@@ -29,7 +29,7 @@ def get_n_sorted_by_feature_func(dataset: ImageDataset, n: int, func, n_smallest
     assert n <= len(dataset)
 
     feature_func_values = []
-    for data_point in enumerate(dataset):
+    for data_point in dataset:
         feature_func_values.append(func(data_point['feature']))
         
     indices = np.argsort(feature_func_values)[:n]

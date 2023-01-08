@@ -9,6 +9,8 @@ def plot_per_class_samples(dataset, n=5):
 
     for label in dataset.labels:
         data_indices = np.where(np.array(dataset.images_data['labels']) == label)[0]
+        if len(data_indices) == 0:
+            continue
 
         for i in range(n):
             data_index = random.choice(data_indices)    
