@@ -19,14 +19,8 @@ def get_by_indices(dataset: ImageDataset, indices: List[int]) -> ImageDataset:
 def get_n_random(dataset: ImageDataset, n: int) -> ImageDataset:
     assert n <= len(dataset)
 
-    new_dataset = copy.deepcopy(dataset)
-
-    indices = random.sample(range(len(new_dataset)), k=n)
-
-    new_dataset.images_data['names'] = list(np.array(new_dataset.images_data['names'])[indices])
-    new_dataset.images_data['labels_text'] = list(np.array(new_dataset.images_data['labels_text'])[indices])
-    new_dataset.images_data['labels'] = list(np.array(new_dataset.images_data['labels'])[indices])
-    new_dataset.images_data['paths'] = list(np.array(new_dataset.images_data['paths'])[indices])
+    indices = random.sample(range(len(dataset)), k=n)
+    new_dataset = get_by_indices(dataset, indices)
 
     return new_dataset
 
@@ -39,7 +33,6 @@ def get_n_sorted_by_feature_func(dataset: ImageDataset, n: int, func, n_smallest
         feature_func_values.append(func(data_point['feature']))
         
     indices = np.argsort(feature_func_values)[:n]
-
     new_dataset = get_by_indices(dataset, indices)
 
     return new_dataset

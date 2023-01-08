@@ -68,7 +68,7 @@ class ImageDataset(torch.utils.data.Dataset):
 
     # restructures labeling, removing those for which there are no data points
     # e.g. possible lables [0, 1, 2, 3, 4], present labels [0, 3, 4], new labels [0, 1, 2]
-    def relabel_dataset(self):
+    def relabel(self):
         labels_unique = np.array(sorted(list(set(self.images_data['labels']))))
 
         self.labels_text = np.delete(self.labels_text, labels_unique)
