@@ -4,8 +4,9 @@ import copy
 import random
 import numpy as np
 from datasets.datasets import ImageDataset
+from typing import List
 
-def get_by_indices(dataset: ImageDataset, indices: list[int]) -> ImageDataset:
+def get_by_indices(dataset: ImageDataset, indices: List[int]) -> ImageDataset:
     new_dataset = copy.deepcopy(dataset)
 
     new_dataset.images_data['names'] = list(np.array(new_dataset.images_data['names'])[indices])
