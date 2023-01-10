@@ -28,7 +28,7 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
 
             # Let's log 20 sample image predictions from the first batch
             if batch_idx == 0:
-                n = 20
+                n = 8
                 images = [img for img in batch['image'][:n]]
                 captions = [f'Ground Truth: {y_i} - Prediction: {y_pred}'
                             for y_i, y_pred in zip(batch['label'][:n], outputs[:n])]
@@ -45,7 +45,7 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
     trainer = pl.Trainer(
         max_epochs=wandb.config.epochs,
         logger=wandb_logger,
-        log_every_n_steps=1,
+        log_every_n_steps=5,
         accelerator='gpu' if torch.cuda.is_available() else 'cpu',
         devices=1,
         callbacks=[LogPredictionSamplesCallback()]
