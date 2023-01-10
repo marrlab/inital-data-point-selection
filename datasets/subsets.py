@@ -5,7 +5,8 @@ import random
 import numpy as np
 from datasets.datasets import ImageDataset
 from typing import List
-from sklearn.cluster import kmeans_plusplus
+from sklearn.cluster import kmeans_plusplus, KMeans
+from sklearn.metrics import pairwise_distances_argmin_min
 
 
 def get_by_indices(dataset: ImageDataset, indices: List[int]) -> ImageDataset:
@@ -56,6 +57,23 @@ def get_n_kmeans_plus_plus(dataset: ImageDataset, n: int) -> ImageDataset:
 
     features = np.array(features)
     centers, indices = kmeans_plusplus(features, n_clusters=n, random_state=0)
+
+    new_dataset = get_by_indices(dataset, indices)
+
+    return new_dataset
+
+
+
+def get_n_kmeans(dataset: ImageDataset, n: int) -> ImageDataset:
+    assert dataset.features_path is not None
+    assert n <= len(dataset)
+
+    features = []
+    for name in dataset.images_data['names']:
+        features.append(dataset.features[name])
+
+    kmeans = KMeans(n_clusters=n).fit(features)
+    indices, _ = pairwise_distances_argmin_min(kmeans.cluster_centers_, features)
 
     new_dataset = get_by_indices(dataset, indices)
 
