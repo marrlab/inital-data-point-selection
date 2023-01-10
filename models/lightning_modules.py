@@ -4,13 +4,18 @@ import wandb
 import pytorch_lightning as pl
 from torchmetrics.functional import accuracy, confusion_matrix
 
+
 class ImageClassifierLightningModule(pl.LightningModule):
-    def __init__(self, model, num_classes, **kwargs):
+    def __init__(self, model, num_classes, labels_text=None, **kwargs):
         super().__init__()
 
         self.model = model
         self.num_classes = num_classes
         self.loss = torch.nn.CrossEntropyLoss()
+        self.labels_text = labels_text
+        if self.labels_text is None:
+            self.labels_text = list(
+                f'label {i}' for i in range(self.num_classes))
 
         self.save_hyperparameters()
 
@@ -28,11 +33,15 @@ class ImageClassifierLightningModule(pl.LightningModule):
 
         logits = self(images)
         preds = torch.argmax(logits, dim=1)
-        
+
         loss = self.loss(logits, labels)
 
         self.log('train_loss', loss)
-        self.log('train_accuracy', accuracy(preds, labels, task='multiclass', num_classes=self.num_classes))
+        self.log('train_accuracy', accuracy(preds, labels,
+                 task='multiclass', num_classes=self.num_classes))
+        wandb.log({'train_confusion_matrix': wandb.plot.confusion_matrix(probs=None,
+                                                           y_true=labels, preds=preds,
+                                                           class_names=self.labels_text)})
         # self.log('train_confusion_matrix', confusion_matrix(preds, label_ids, self.num_classes))
 
         return loss
@@ -47,11 +56,15 @@ class ImageClassifierLightningModule(pl.LightningModule):
 
         logits = self.forward(images)
         preds = torch.argmax(logits, dim=1)
-        
+
         loss = self.loss(logits, labels)
 
         self.log('val_loss', loss)
-        self.log('val_accuracy', accuracy(preds, labels, task='multiclass', num_classes=self.num_classes))
+        self.log('val_accuracy', accuracy(preds, labels,
+                 task='multiclass', num_classes=self.num_classes))
+        wandb.log({'train_confusion_matrix': wandb.plot.confusion_matrix(probs=None,
+                                                           y_true=labels, preds=preds,
+                                                           class_names=self.labels_text)})
         # self.log('val_confusion_matrix', confusion_matrix(preds, label_ids, self.num_classes))
 
         return preds

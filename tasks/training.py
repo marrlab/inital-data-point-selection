@@ -40,7 +40,7 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
                     caption=captions)
 
     lightning_model = ImageClassifierLightningModule(
-        model, len(train_dataset.labels))
+        model, len(train_dataset.labels), labels_text=train_dataset.labels_text)
     wandb_logger.watch(lightning_model)
     trainer = pl.Trainer(
         max_epochs=wandb.config.epochs,
