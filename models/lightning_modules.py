@@ -40,8 +40,8 @@ class ImageClassifierLightningModule(pl.LightningModule):
         self.log('train_accuracy', accuracy(preds, labels,
                  task='multiclass', num_classes=self.num_classes))
         wandb.log({'train_confusion_matrix': wandb.plot.confusion_matrix(probs=None,
-                                                           y_true=labels, preds=preds,
-                                                           class_names=self.labels_text)})
+                                                                         y_true=labels.cpu().numpy(), preds=preds.cpu().numpy(),
+                                                                         class_names=self.labels_text)})
         # self.log('train_confusion_matrix', confusion_matrix(preds, label_ids, self.num_classes))
 
         return loss
@@ -63,8 +63,8 @@ class ImageClassifierLightningModule(pl.LightningModule):
         self.log('val_accuracy', accuracy(preds, labels,
                  task='multiclass', num_classes=self.num_classes))
         wandb.log({'val_confusion_matrix': wandb.plot.confusion_matrix(probs=None,
-                                                           y_true=labels, preds=preds,
-                                                           class_names=self.labels_text)})
+                                                                       y_true=labels.cpu().numpy(), preds=preds.cpu().numpy(),
+                                                                       class_names=self.labels_text)})
         # self.log('val_confusion_matrix', confusion_matrix(preds, label_ids, self.num_classes))
 
         return preds
