@@ -31,7 +31,7 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
                 n = 8
                 images = [img for img in batch['image'][:n]]
                 captions = [f'Ground Truth: {y_i} - Prediction: {y_pred}'
-                            for y_i, y_pred in zip(batch['label'][:n], outputs[:n])]
+                            for y_i, y_pred in zip(batch['label'][:n], outputs['labels'][:n])]
 
                 # Option 1: log images with `WandbLogger.log_image`
                 wandb_logger.log_image(
