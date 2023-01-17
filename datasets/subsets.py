@@ -47,7 +47,7 @@ def get_n_sorted_by_feature_func(dataset: ImageDataset, n: int, func, n_smallest
     return new_dataset
 
 
-def get_n_kmeans(dataset: ImageDataset, n: int, mode='kmeans++', criterium='closest') -> ImageDataset:
+def get_n_kmeans(dataset: ImageDataset, n: int, mode='kmeans++', criterium='closest', verbose=False) -> ImageDataset:
     assert dataset.features_path is not None
     assert n <= len(dataset)
     assert mode in ('kmeans++', 'kmeans')
@@ -76,7 +76,7 @@ def get_n_kmeans(dataset: ImageDataset, n: int, mode='kmeans++', criterium='clos
         indices = []
         # finding a point belonging to cluster i that has the biggest distance to its center
         for i in range(n):
-            original_indices = np.where(cluster_indices == i)
+            original_indices = np.where(cluster_indices == i)[0]
             furthest_feature_index = original_indices[np.argmax(
                 cluster_distances[original_indices])]
 
@@ -84,4 +84,8 @@ def get_n_kmeans(dataset: ImageDataset, n: int, mode='kmeans++', criterium='clos
 
     new_dataset = get_by_indices(dataset, indices)
 
-    return new_dataset
+    if verbose:
+        return new_dataset, centers, indices, features[indices]
+    else:
+        return new_dataset
+        
