@@ -4,6 +4,7 @@ import wandb
 import pytorch_lightning as pl
 from torchmetrics.functional import accuracy, f1_score
 from utils.utils import flatten_tensor_dicts
+from collections import defaultdict
 
 
 class ImageClassifierLightningModule(pl.LightningModule):
@@ -17,6 +18,8 @@ class ImageClassifierLightningModule(pl.LightningModule):
         if self.labels_text is None:
             self.labels_text = list(
                 f'label {i}' for i in range(self.num_classes))
+
+        self.metrics_epoch_end = defaultdict(list)
 
         self.save_hyperparameters()
 
@@ -39,11 +42,14 @@ class ImageClassifierLightningModule(pl.LightningModule):
     def _common_epoch_end(self, outputs, step):
         outputs = flatten_tensor_dicts(outputs)
 
-        self.log(f'{step}_loss_epoch_end', torch.stack(outputs['loss']))
-        self.log(f'{step}_accuracy_epoch_end', accuracy(torch.stack(outputs['preds']), torch.stack(outputs['labels']),
-                 task='multiclass', num_classes=self.num_classes))
-        self.log(f'{step}_f1_macro_epoch_end', f1_score(
-            torch.stack(outputs['preds']), torch.stack(outputs['labels']), task='multiclass', num_classes=self.num_classes, average='macro'))
+        self.metrics_epoch_end[f'{step}_loss_epoch_end'].append(torch.mean(outputs['loss']))
+        self.metrics_epoch_end[f'{step}_accuracy_epoch_end'].append(accuracy(outputs['preds'], outputs['labels'], task='multiclass', num_classes=self.num_classes))
+        self.metrics_epoch_end[f'{step}_f1_macro_epoch_end'].append(f1_score(outputs['preds'], outputs['labels'], task='multiclass', num_classes=self.num_classes, average='macro'))
+        self.metrics_epoch_end[f'{step}_f1_micro_epoch_end'].append(f1_score(outputs['preds'], outputs['labels'], task='multiclass', num_classes=self.num_classes, average='micro'))
+
+        for key in self.metrics_epoch_end:
+            self.log(key, self.metrics_epoch_end[key][-1])
+            self.log(f'{key}_max', torch.max(self.metrics_epoch_end[key]))
 
     def _common_step(self, batch, batch_idx, step):
         assert step in ('train', 'val')
@@ -65,6 +71,8 @@ class ImageClassifierLightningModule(pl.LightningModule):
                  task='multiclass', num_classes=self.num_classes))
         self.log(f'{step}_f1_macro', f1_score(
             preds, labels, task='multiclass', num_classes=self.num_classes, average='macro'))
+        self.log(f'{step}_f1_micro', f1_score(
+            preds, labels, task='multiclass', num_classes=self.num_classes, average='micro'))
 
         return {'loss': loss, 'preds': preds, 'labels': labels}
 
