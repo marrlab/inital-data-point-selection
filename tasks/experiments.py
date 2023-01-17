@@ -90,7 +90,7 @@ def subsetting_methods_performance(dataset: ImageDataset, runs: int, n: int) -> 
         d['method'] = method_name
         for l in dataset.labels:
             d[dataset.labels_text[l]] = np.sum(
-                np.array(subset.images_data['labels'] == l))
+                np.array(subset.images_data['labels']) == l)
 
         return d
 
