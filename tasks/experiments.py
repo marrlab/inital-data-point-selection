@@ -3,6 +3,7 @@ import copy
 import wandb
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 from datasets.datasets import ImageDataset, MatekDataset
 from models.classifiers import \
     get_classifier_imagenet, get_classifier_imagenet_preprocess_only
@@ -93,7 +94,7 @@ def subsetting_methods_performance(dataset: ImageDataset, runs: int, n: int) -> 
 
         return d
 
-    for _ in range(runs):
+    for _ in tqdm(range(runs)):
         ds.append(generate_summary('random', get_n_random(dataset, n)))
         ds.append(generate_summary('badge_kmeans++_closest',
                   get_n_kmeans(dataset, n, mode='kmeans++', criterium='closest')))
