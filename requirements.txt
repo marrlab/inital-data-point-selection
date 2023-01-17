@@ -24,6 +24,7 @@ multidict==6.0.4
 numba==0.56.4
 numpy==1.23.5
 packaging==22.0
+pandas==1.5.2
 pathtools==0.1.2
 Pillow==9.4.0
 promise==2.3
@@ -34,6 +35,7 @@ pynndescent==0.5.8
 pyparsing==3.0.9
 python-dateutil==2.8.2
 pytorch-lightning==1.8.6
+pytz==2022.7.1
 PyYAML==6.0
 requests==2.28.1
 scikit-learn==1.2.0

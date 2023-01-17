@@ -4,7 +4,7 @@ import copy
 import random
 import numpy as np
 from datasets.datasets import ImageDataset
-from typing import List
+from typing import List, Tuple
 from sklearn.cluster import kmeans_plusplus, KMeans
 from sklearn.metrics import pairwise_distances_argmin_min
 
@@ -47,7 +47,7 @@ def get_n_sorted_by_feature_func(dataset: ImageDataset, n: int, func, n_smallest
     return new_dataset
 
 
-def get_n_kmeans(dataset: ImageDataset, n: int, mode='kmeans++', criterium='closest', verbose=False) -> ImageDataset:
+def get_n_kmeans(dataset: ImageDataset, n: int, mode='kmeans++', criterium='closest', verbose=False) -> Tuple[ImageDataset, tuple[ImageDataset, np.array, np.array, np.array]]:
     assert dataset.features_path is not None
     assert n <= len(dataset)
     assert mode in ('kmeans++', 'kmeans')
@@ -88,4 +88,3 @@ def get_n_kmeans(dataset: ImageDataset, n: int, mode='kmeans++', criterium='clos
         return new_dataset, centers, indices, features[indices]
     else:
         return new_dataset
-        
