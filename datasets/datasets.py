@@ -39,6 +39,12 @@ class ImageDataset(torch.utils.data.Dataset):
         }
         self.features = {}
 
+        # mapping from image name to feature
+        if features_path is not None:
+            with open(features_path, 'r') as csv_file:
+                csv_reader = csv.DictReader(csv_file)
+                for row in csv_reader:
+                    self.features[row['name']] = np.array([float(el) for el in row['feature'][1:-1].split(', ')])
 
     def __getitem__(self, i):
         data_point = {
@@ -121,13 +127,3 @@ class MatekDataset(ImageDataset):
                 self.images_data['labels_text'].append(label_text)
                 self.images_data['labels'].append(self.labels_text_mapping[label_text])
                 self.images_data['paths'].append(os.path.join(label_dir, f.name))
-
-        # mapping from image name to feature
-        if features_path is not None:
-            with open(features_path, 'r') as csv_file:
-                csv_reader = csv.DictReader(csv_file)
-                for row in csv_reader:
-                    self.features[row['name']] = np.array([float(el) for el in row['feature'][1:-1].split(', ')])
-
-        self.load_images = load_images
-    

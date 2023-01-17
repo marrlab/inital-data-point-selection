@@ -47,33 +47,40 @@ def get_n_sorted_by_feature_func(dataset: ImageDataset, n: int, func, n_smallest
     return new_dataset
 
 
-def get_n_kmeans_plus_plus(dataset: ImageDataset, n: int) -> ImageDataset:
+def get_n_kmeans(dataset: ImageDataset, n: int, mode='kmeans++', criterium='closest') -> ImageDataset:
     assert dataset.features_path is not None
     assert n <= len(dataset)
+    assert mode in ('kmeans++', 'kmeans')
+    assert criterium in ('closest', 'furthest')
 
     features = []
     for name in dataset.images_data['names']:
         features.append(dataset.features[name])
 
     features = np.array(features)
-    centers, indices = kmeans_plusplus(features, n_clusters=n, random_state=0)
 
-    new_dataset = get_by_indices(dataset, indices)
+    centers, indices = None, None
+    if mode == 'kmeans++':
+        centers, indices = kmeans_plusplus(
+            features, n_clusters=n, random_state=0)
+    elif mode == 'kmeans':
+        kmeans = KMeans(n_clusters=n).fit(features)
+        centers = kmeans.cluster_centers_
+        indices, _ = pairwise_distances_argmin_min(centers, features)
 
-    return new_dataset
+    if criterium == 'furthest':
+        # getting cluster index for each feature
+        cluster_indices, cluster_distances = pairwise_distances_argmin_min(
+            features, centers)
 
+        indices = []
+        # finding a point belonging to cluster i that has the biggest distance to its center
+        for i in range(n):
+            original_indices = np.where(cluster_indices == i)
+            furthest_feature_index = original_indices[np.argmax(
+                cluster_distances[original_indices])]
 
-
-def get_n_kmeans(dataset: ImageDataset, n: int) -> ImageDataset:
-    assert dataset.features_path is not None
-    assert n <= len(dataset)
-
-    features = []
-    for name in dataset.images_data['names']:
-        features.append(dataset.features[name])
-
-    kmeans = KMeans(n_clusters=n).fit(features)
-    indices, _ = pairwise_distances_argmin_min(kmeans.cluster_centers_, features)
+            indices.append(furthest_feature_index)
 
     new_dataset = get_by_indices(dataset, indices)
 
