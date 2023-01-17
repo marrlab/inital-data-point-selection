@@ -1,6 +1,7 @@
 
 import torch
 import wandb
+import numpy as np
 import pytorch_lightning as pl
 from torchmetrics.functional import accuracy, f1_score
 from utils.utils import flatten_tensor_dicts
@@ -42,14 +43,19 @@ class ImageClassifierLightningModule(pl.LightningModule):
     def _common_epoch_end(self, outputs, step):
         outputs = flatten_tensor_dicts(outputs)
 
-        self.metrics_epoch_end[f'{step}_loss_epoch_end'].append(torch.mean(outputs['loss']))
-        self.metrics_epoch_end[f'{step}_accuracy_epoch_end'].append(accuracy(outputs['preds'], outputs['labels'], task='multiclass', num_classes=self.num_classes))
-        self.metrics_epoch_end[f'{step}_f1_macro_epoch_end'].append(f1_score(outputs['preds'], outputs['labels'], task='multiclass', num_classes=self.num_classes, average='macro'))
-        self.metrics_epoch_end[f'{step}_f1_micro_epoch_end'].append(f1_score(outputs['preds'], outputs['labels'], task='multiclass', num_classes=self.num_classes, average='micro'))
+        self.metrics_epoch_end[f'{step}_loss_epoch_end'].append(
+            torch.mean(outputs['loss']).detach().item())
+        self.metrics_epoch_end[f'{step}_accuracy_epoch_end'].append(accuracy(
+            outputs['preds'], outputs['labels'], task='multiclass', num_classes=self.num_classes).detach().item())
+        self.metrics_epoch_end[f'{step}_f1_macro_epoch_end'].append(f1_score(
+            outputs['preds'], outputs['labels'], task='multiclass', num_classes=self.num_classes, average='macro').detach().item())
+        self.metrics_epoch_end[f'{step}_f1_micro_epoch_end'].append(f1_score(
+            outputs['preds'], outputs['labels'], task='multiclass', num_classes=self.num_classes, average='micro').detach().item())
 
         for key in self.metrics_epoch_end:
             self.log(key, self.metrics_epoch_end[key][-1])
-            self.log(f'{key}_max', torch.max(self.metrics_epoch_end[key]))
+            self.log(f'{key}_max', np.max(self.metrics_epoch_end[key]))
+            self.log(f'{key}_min', np.min(self.metrics_epoch_end[key]))
 
     def _common_step(self, batch, batch_idx, step):
         assert step in ('train', 'val')
