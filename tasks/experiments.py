@@ -94,6 +94,9 @@ def subsetting_methods_performance(dataset: ImageDataset, runs: int, n: int) -> 
 
         return d
 
+    # true distribution
+    ds.append(generate_summary('true', dataset))
+
     for _ in tqdm(range(runs)):
         ds.append(generate_summary('random', get_n_random(dataset, n)))
         ds.append(generate_summary('badge_kmeans++_closest',
