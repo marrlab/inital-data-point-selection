@@ -47,7 +47,7 @@ def get_n_sorted_by_feature_func(dataset: ImageDataset, n: int, func, n_smallest
     return new_dataset
 
 
-def get_n_kmeans(dataset: ImageDataset, n: int, mode='kmeans++', criterium='closest', verbose=False) -> Tuple[ImageDataset, tuple[ImageDataset, np.array, np.array, np.array]]:
+def get_n_kmeans(dataset: ImageDataset, n: int, mode='kmeans++', criterium='closest', verbose=False) -> Tuple[ImageDataset, Tuple[ImageDataset, np.array, np.array, np.array]]:
     assert dataset.features_path is not None
     assert n <= len(dataset)
     assert mode in ('kmeans++', 'kmeans')
