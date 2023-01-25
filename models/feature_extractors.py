@@ -7,6 +7,7 @@ from tqdm import tqdm
 from models.helpers import Identity
 from torchvision import transforms
 from ctypes import ArgumentError
+from models.med_al_ssl_surgery.simclr_arch import SimCLRArch
 
 def get_feature_extractor_imagenet(architecture: str) -> tuple:
     model = None
@@ -88,6 +89,25 @@ def get_feature_extractor_imagenet(architecture: str) -> tuple:
 
     if model is None or preprocess is None:
         raise ArgumentError('model or preprocessing pipeline could not be loaded')
+
+    if torch.cuda.is_available():
+        model.to('cuda')
+
+    model.eval()
+
+    return model, preprocess
+
+
+def get_feature_extractor_simclr(weights_path: str) -> tuple:
+    weights = torch.load(weights_path)
+
+    model = SimCLRArch(3, 10, 0.15, False, arch='resnet')
+    model.load_state_dict(weights['state_dict'])
+
+    preprocess = transforms.Compose([
+        transforms.Resize(128),
+        transforms.ToTensor(),
+    ])
 
     if torch.cuda.is_available():
         model.to('cuda')
