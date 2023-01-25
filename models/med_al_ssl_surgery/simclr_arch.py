@@ -1,5 +1,5 @@
 import torch.nn as nn
-from med_al_ssl_surgery.resnet import resnet18
+from models.med_al_ssl_surgery.resnet import resnet18
 import torchvision.models as models
 
 
@@ -51,37 +51,8 @@ class SimCLRArch(nn.Module):
         )
 
     def forward(self, x):
-        h = self.encoder(x)
-        z = self.projector(h)
-
-        if self.normalize:
-            z = nn.functional.normalize(z, dim=1)
-        return h, z
-
-    def forward_encoder_classifier(self, x):
-        h = self.encoder(x)
-        x = self.classifier(h)
-        return x
-
-    def forward_encoder(self, x):
         x = self.encoder(x)
         return x
-
-    def forward_classifier(self, x):
-        x = self.classifier(x)
-        return x
-
-    def forward_features(self, x):
-        out, feat_list = self.encoder.forward_features(x)
-        out = self.classifier(out)
-        return out, feat_list
-
-    def forward_embeddings(self, x):
-        out, feat = self.encoder.forward_embeddings(x)
-        return out, feat
-
-    def get_embedding_dim(self):
-        return self.encoder.embedding_dim
 
 
 def load_pretrained(model):
