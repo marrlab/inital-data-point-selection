@@ -50,13 +50,9 @@ class SimCLRArch(nn.Module):
             nn.Linear(84, num_classes)
         )
 
-    # def forward(self, x):
-    #     x = self.encoder(x)
-    #     return x
-
     def forward(self, x):
-        out, _ = self.encoder.forward_embeddings(x)
-        return out
+        x = self.encoder(x)
+        return x
 
 
 def load_pretrained(model):
