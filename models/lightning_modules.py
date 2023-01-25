@@ -4,6 +4,7 @@ import wandb
 import numpy as np
 import pytorch_lightning as pl
 from torchmetrics.functional import accuracy, f1_score
+from sklearn.metrics import balanced_accuracy_score, matthews_corrcoef, cohen_kappa_score
 from utils.utils import flatten_tensor_dicts
 from collections import defaultdict
 
@@ -51,6 +52,12 @@ class ImageClassifierLightningModule(pl.LightningModule):
             outputs['preds'], outputs['labels'], task='multiclass', num_classes=self.num_classes, average='macro').detach().item())
         self.metrics_epoch_end[f'{step}_f1_micro_epoch_end'].append(f1_score(
             outputs['preds'], outputs['labels'], task='multiclass', num_classes=self.num_classes, average='micro').detach().item())
+        self.metrics_epoch_end[f'{step}_balanced_accuracy'].append(
+            balanced_accuracy_score(outputs['labels'], outputs['preds']))
+        self.metrics_epoch_end[f'{step}_matthews_corrcoef'].append(
+            matthews_corrcoef(outputs['labels'], outputs['preds']))
+        self.metrics_epoch_end[f'{step}_matthews_corrcoef'].append(
+            cohen_kappa_score(outputs['labels'], outputs['preds']))
 
         for key in self.metrics_epoch_end:
             self.log(key, self.metrics_epoch_end[key][-1])
