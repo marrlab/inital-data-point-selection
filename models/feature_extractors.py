@@ -99,7 +99,10 @@ def get_feature_extractor_imagenet(architecture: str) -> tuple:
 
 
 def get_feature_extractor_simclr_matek(weights_path: str) -> tuple:
-    weights = torch.load(weights_path)
+    if torch.cuda.is_available():
+        weights = torch.load(weights_path)
+    else:
+        weights = torch.load(weights_path, map_location=torch.device('cpu'))
 
     model = SimCLRArch(3, 10, 0.15, False, arch='resnet')
     model.load_state_dict(weights['state_dict'])

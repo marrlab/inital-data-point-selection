@@ -1,10 +1,23 @@
 
 import os
 import csv
+import sys
 import torch
 import numpy as np
 from PIL import Image
 from torchvision import transforms
+
+
+max_int = sys.maxsize
+while True:
+    # decrease the max_int value by factor 10 
+    # as long as the OverflowError occurs.
+
+    try:
+        csv.field_size_limit(max_int)
+        break
+    except OverflowError:
+        max_int = int(max_int/10)
 
 # abstract class
 class ImageDataset(torch.utils.data.Dataset):
