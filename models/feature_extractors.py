@@ -98,7 +98,7 @@ def get_feature_extractor_imagenet(architecture: str) -> tuple:
     return model, preprocess
 
 
-def get_feature_extractor_simclr(weights_path: str) -> tuple:
+def get_feature_extractor_simclr_matek(weights_path: str) -> tuple:
     weights = torch.load(weights_path)
 
     model = SimCLRArch(3, 10, 0.15, False, arch='resnet')
@@ -107,6 +107,7 @@ def get_feature_extractor_simclr(weights_path: str) -> tuple:
     preprocess = transforms.Compose([
         transforms.Resize(128),
         transforms.ToTensor(),
+        transforms.Normalize(mean=[0.8206, 0.7280, 0.8362], std=[0.1630, 0.2506, 0.0919]),
     ])
 
     if torch.cuda.is_available():
