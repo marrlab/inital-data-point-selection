@@ -6,6 +6,7 @@ import torch
 import numpy as np
 from PIL import Image
 from torchvision import transforms
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 
 max_int = sys.maxsize
@@ -114,6 +115,24 @@ class ImageDataset(torch.utils.data.Dataset):
                 continue
 
             self.images_data['labels'][i] = self.labels_text_mapping[self.images_data['labels_text'][i]]
+
+    def standard_scale_features(self):
+        keys = list(self.features.keys())
+        X = np.array([self.features[k] for k in keys])
+
+        X_new = StandardScaler().fit_transform(X)
+
+        for i, key in enumerate(keys):
+            self.features[key] = X_new[i]
+        
+    def min_max_scale_features(self):
+        keys = list(self.features.keys())
+        X = np.array([self.features[k] for k in keys])
+
+        X_new = MinMaxScaler(feature_range=(-1,1)).fit_transform(X)
+
+        for i, key in enumerate(keys):
+            self.features[key] = X_new[i]
 
 class MatekDataset(ImageDataset):
     def __init__(
