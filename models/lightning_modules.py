@@ -56,7 +56,7 @@ class ImageClassifierLightningModule(pl.LightningModule):
             balanced_accuracy_score(outputs['labels'].cpu().numpy(), outputs['preds'].cpu().numpy()))
         self.metrics_epoch_end[f'{step}_matthews_corrcoef'].append(
             matthews_corrcoef(outputs['labels'].cpu().numpy(), outputs['preds'].cpu().numpy()))
-        self.metrics_epoch_end[f'{step}_matthews_corrcoef'].append(
+        self.metrics_epoch_end[f'{step}_cohen_kappa_score'].append(
             cohen_kappa_score(outputs['labels'].cpu().numpy(), outputs['preds'].cpu().numpy()))
 
         for key in self.metrics_epoch_end:

@@ -1,7 +1,7 @@
 
 import torch
 import pandas as pd
-from typing import Iterable, Union
+from typing import Iterable
 from utils.types import Result
 
 def flatten_tensor_dicts(ds):
@@ -24,3 +24,10 @@ def result_to_dataframe(result: Result) -> pd.DataFrame:
         return result
 
     return pd.concat(result, ignore_index=True)
+
+
+def load_dataframes(paths: Iterable[str]) -> Iterable[pd.DataFrame]:
+    return [
+        pd.read_csv(p, index_col=0)
+        for p in paths
+    ]
