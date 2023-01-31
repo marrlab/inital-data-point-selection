@@ -56,6 +56,7 @@ def random_baseline():
 # .criterium
 def badge_sampling():
     assert wandb.config.dataset in ('matek')
+    assert 'feature_scaling' not in wandb.config or wandb.config.feature_scaling in ('standard', 'min_max')
 
     preprocess = get_classifier_imagenet_preprocess_only(
         wandb.config.architecture)
@@ -65,6 +66,12 @@ def badge_sampling():
         train_dataset = MatekDataset(
             'train', preprocess=preprocess, features_path=wandb.config.features_path)
         val_dataset = MatekDataset('test', preprocess=preprocess)
+
+    if 'feature_scaling' in wandb.config:
+        if wandb.config.feature_scaling == 'standard':
+            train_dataset.standard_scale_features()
+        elif wandb.config.feature_scaling == 'min_max':
+            train_dataset.min_max_scale_features()
 
     train_subset = get_n_kmeans(train_dataset, wandb.config.train_samples,
                                 mode=wandb.config.mode, criterium=wandb.config.criterium)
