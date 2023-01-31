@@ -53,11 +53,11 @@ class ImageClassifierLightningModule(pl.LightningModule):
         self.metrics_epoch_end[f'{step}_f1_micro_epoch_end'].append(f1_score(
             outputs['preds'], outputs['labels'], task='multiclass', num_classes=self.num_classes, average='micro').detach().item())
         self.metrics_epoch_end[f'{step}_balanced_accuracy'].append(
-            balanced_accuracy_score(outputs['labels'], outputs['preds']))
+            balanced_accuracy_score(outputs['labels'].cpu().numpy(), outputs['preds'].cpu().numpy()))
         self.metrics_epoch_end[f'{step}_matthews_corrcoef'].append(
-            matthews_corrcoef(outputs['labels'], outputs['preds']))
+            matthews_corrcoef(outputs['labels'].cpu().numpy(), outputs['preds'].cpu().numpy()))
         self.metrics_epoch_end[f'{step}_matthews_corrcoef'].append(
-            cohen_kappa_score(outputs['labels'], outputs['preds']))
+            cohen_kappa_score(outputs['labels'].cpu().numpy(), outputs['preds'].cpu().numpy()))
 
         for key in self.metrics_epoch_end:
             self.log(key, self.metrics_epoch_end[key][-1])
