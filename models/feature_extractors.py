@@ -104,7 +104,7 @@ def get_feature_extractor_simclr_matek(weights_path: str) -> tuple:
     else:
         weights = torch.load(weights_path, map_location=torch.device('cpu'))
 
-    model = SimCLRArch(3, 10, 0.15, False, arch='resnet')
+    model = SimCLRArch(3, 10, 0.15, False, arch='resnet', input_size=128)
     model.load_state_dict(weights['state_dict'])
 
     preprocess = transforms.Compose([

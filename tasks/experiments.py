@@ -131,14 +131,14 @@ def cluster_data_points_analysis(dataset: ImageDataset, clusters: int) -> pd.Dat
 
     features = np.array(features)
     labels = np.array(labels)
+    label_names = np.array(label_names)
 
-    centers, indices = None, None
     kmeans = KMeans(n_clusters=clusters).fit(features)
 
     # per feature
     cluster_labels = kmeans.labels_
     cluster_centers = kmeans.cluster_centers_[cluster_labels]
-    distances_to_cluster_centers = np.linalg.norm(features - cluster_centers, axis=0)
+    distances_to_cluster_centers = np.linalg.norm(features - cluster_centers, axis=1)
 
     return pd.DataFrame({
         'label': labels,
