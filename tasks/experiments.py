@@ -9,6 +9,7 @@ from models.classifiers import \
     get_classifier_imagenet, get_classifier_imagenet_preprocess_only
 from datasets.subsets import get_n_random, get_n_kmeans
 from tasks.training import train_image_classifier
+from sklearn.cluster import kmeans_plusplus, KMeans
 
 
 # wandb.config requirements:
@@ -116,3 +117,33 @@ def subsetting_methods_performance(dataset: ImageDataset, runs: int, n: int) -> 
             dataset, n, mode='kmeans', criterium='furthest')))
 
     return pd.DataFrame(ds)
+
+
+def cluster_data_points_analysis(dataset: ImageDataset, clusters: int) -> pd.DataFrame:
+    features = []
+    labels = []
+    label_names = []
+    
+    for data_point in dataset:
+        features.append(data_point['feature'])
+        labels.append(data_point['label'])
+        label_names.append(data_point['name'])
+
+    features = np.array(features)
+    labels = np.array(labels)
+
+    centers, indices = None, None
+    kmeans = KMeans(n_clusters=clusters).fit(features)
+
+    # per feature
+    cluster_labels = kmeans.labels_
+    cluster_centers = kmeans.cluster_centers_[cluster_labels]
+    distances_to_cluster_centers = np.linalg.norm(features - cluster_centers, axis=0)
+
+    return pd.DataFrame({
+        'label': labels,
+        'label_name': label_names,
+        'cluster_label': cluster_labels,
+        'distance_to_cluster_center': distances_to_cluster_centers
+    })
+
