@@ -148,13 +148,13 @@ class MatekDataset(ImageDataset):
         assert split in ('train', 'test')
 
         self.images_dir = os.path.join(dataset_root_dir, split)
-        self.labels_text = [f.name for f in os.scandir(self.images_dir) if f.is_dir()]
+        self.labels_text = sorted([f.name for f in os.scandir(self.images_dir) if f.is_dir()])
         self.labels = list(range(len(self.labels_text)))
         self.labels_text_mapping = {text: id for id, text in enumerate(self.labels_text)}
         
         for label_text in self.labels_text:
             label_dir = os.path.join(self.images_dir, label_text)
-            for f in os.scandir(label_dir):
+            for f in sorted(os.scandir(label_dir)):
                 self.images_data['names'].append(f.name)
                 self.images_data['labels_text'].append(label_text)
                 self.images_data['labels'].append(self.labels_text_mapping[label_text])

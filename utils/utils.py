@@ -26,8 +26,14 @@ def result_to_dataframe(result: Result) -> pd.DataFrame:
     return pd.concat(result, ignore_index=True)
 
 
-def load_dataframes(paths: Iterable[str]) -> Iterable[pd.DataFrame]:
-    return [
-        pd.read_csv(p, index_col=0)
-        for p in paths
-    ]
+def load_dataframes(paths: Iterable[str], contains_index=True) -> Iterable[pd.DataFrame]:
+    if contains_index:
+        return [
+            pd.read_csv(p, index_col=0)
+            for p in paths
+        ]
+    else:
+        return [
+            pd.read_csv(p)
+            for p in paths
+        ]

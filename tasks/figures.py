@@ -1,4 +1,5 @@
 
+import wandb
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -36,3 +37,25 @@ def subsetting_methods_performance_entropy(result: Result, path: str):
     df['entropy'] = df.apply(lambda x: entropy(x), axis=1)
     df = df[['entropy']]
     dfi.export(df, path)
+
+
+def classification_metrics():
+    api = wandb.Api()
+
+    runs = api.runs('mireczech/random-baseline')
+    hist_list = [] 
+    for run in runs: 
+        # if not 'val/loss' in run.summary:
+        #     continue
+
+        # name = run.config['model']['_target_'].split('.')[-1]
+        hist = run.history(keys=['epoch', 'val_balanced_accuracy'])
+        hist_list.append(hist)
+
+    df = pd.concat(hist_list, ignore_index=True)
+    # df = df.query("`val/loss` != 'NaN'")
+
+    # sns.lineplot(x="epoch", y="val/loss", hue="name", data=df)
+    # plt.show()
+
+    return df
