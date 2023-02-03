@@ -154,7 +154,7 @@ class MatekDataset(ImageDataset):
         
         for label_text in self.labels_text:
             label_dir = os.path.join(self.images_dir, label_text)
-            for f in sorted(os.scandir(label_dir)):
+            for f in sorted(os.scandir(label_dir), key=lambda el: el.name):
                 self.images_data['names'].append(f.name)
                 self.images_data['labels_text'].append(label_text)
                 self.images_data['labels'].append(self.labels_text_mapping[label_text])
