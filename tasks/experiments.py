@@ -33,6 +33,8 @@ def random_baseline():
 
     train_subset = get_n_random(train_dataset, wandb.config.train_samples)
     train_subset.relabel()
+    wandb.config.labels = len(train_subset.labels)
+    wandb.config.labels_text = train_subset.labels_text
 
     val_subset = copy.deepcopy(val_dataset)
     val_subset.match_labels_and_filter(train_subset)
@@ -77,6 +79,8 @@ def badge_sampling():
     train_subset = get_n_kmeans(train_dataset, wandb.config.train_samples,
                                 mode=wandb.config.mode, criterium=wandb.config.criterium)
     train_subset.relabel()
+    wandb.config.labels = len(train_subset.labels)
+    wandb.config.labels_text = train_subset.labels_text
 
     val_subset = copy.deepcopy(val_dataset)
     val_subset.match_labels_and_filter(train_subset)
