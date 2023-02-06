@@ -8,8 +8,7 @@ import dataframe_image as dfi
 from utils.utils import load_dataframes
 from scipy.stats import entropy
 from utils.types import Result
-from utils.utils import result_to_dataframe
-from collections import defaultdict
+from utils.utils import result_to_dataframe, get_runs
 
 
 def subsetting_methods_performance_preprocessing(result: Result) -> pd.DataFrame:
@@ -98,23 +97,99 @@ def cluster_data_points_analysis(result_path: str, path: str = None):
     dfi.export(result_df, path)
 
 
-def classification_metrics():
+def classification_metrics(dataset_name: str, path_mean: str, path_std):
+    wandb.login(key='a29d7c338a594e427f18a0f1502e5a8f36e9adfb')
     api = wandb.Api()
 
-    runs = api.runs('mireczech/random-baseline')
-    hist_list = [] 
-    for run in runs: 
-        # if not 'val/loss' in run.summary:
-        #     continue
+    # defined fields
+    required_metrics = [
+        'val_accuracy_epoch_end_max',
+        'val_f1_macro_epoch_end_max',
+        'val_balanced_accuracy_max',
+        'val_matthews_corrcoef_max',
+        'val_cohen_kappa_score_max'
+    ]
+    required_metrics_name = [
+        'accuracy',
+        'f1 macro',
+        'balanced accuracy',
+        'matthews corrcoef',
+        'cohen kappa score'
+    ]
 
-        # name = run.config['model']['_target_'].split('.')[-1]
-        hist = run.history(keys=['epoch', 'val_balanced_accuracy'])
-        hist_list.append(hist)
+    # random baseline
+    def filter_run_random(row):
+        if row['config']['dataset'] != dataset_name:
+            return False
 
-    df = pd.concat(hist_list, ignore_index=True)
-    # df = df.query("`val/loss` != 'NaN'")
+        if 'epoch' not in row['summary'] or row['summary']['epoch'] != 29:
+            return False
+        
+        if any(rm not in row['summary'] for rm in required_metrics):
+            return False
+        
+        return True
+    
+    def transform_runs_random(df):
+        for i in range(len(required_metrics)):
+            df[required_metrics_name[i]] = \
+                df.apply(lambda r: r['summary'][required_metrics[i]], axis=1)
 
-    # sns.lineplot(x="epoch", y="val/loss", hue="name", data=df)
-    # plt.show()
+        df['classes'] = df.apply(lambda r: r['config']['num_classes'], axis=1)
 
-    return df
+        df = df.drop(['name', 'summary', 'config'], axis=1)
+
+        return df
+
+    df_random = get_runs('random-baseline')
+    filtered_rows = df_random.apply(filter_run_random, axis=1)
+    df_random = df_random[filtered_rows]
+    df_random = transform_runs_random(df_random)
+    df_random['method'] = 'random'
+    
+    # badge sampling
+    def filter_run_badge(row):
+        if row['config']['dataset'] != dataset_name:
+            return False
+
+        if 'feature_scaling' not in row['config'] or row['config']['feature_scaling'] != 'standard':
+            return False
+
+        if 'epoch' not in row['summary'] or row['summary']['epoch'] != 29:
+            return False
+        
+        if any(rm not in row['summary'] for rm in required_metrics):
+            return False
+        
+        return True
+    
+    def transform_runs_badge(df):
+        for i in range(len(required_metrics)):
+            df[required_metrics_name[i]] = \
+                df.apply(lambda r: r['summary'][required_metrics[i]], axis=1)
+
+        df['classes'] = df.apply(lambda r: r['config']['num_classes'], axis=1)
+        df['method'] = df.apply(lambda r: f"{r['config']['mode']} {r['config']['criterium']}", axis=1)
+
+        df = df.drop(['name', 'summary', 'config'], axis=1)
+
+        return df
+
+    df_badge = get_runs('badge-sampling')
+    filtered_rows = df_badge.apply(filter_run_badge, axis=1)
+    df_badge = df_badge[filtered_rows]
+    df_badge = transform_runs_badge(df_badge)
+
+    # joining
+    df = pd.concat([df_random, df_badge], ignore_index=True)
+
+    # computing statistics
+    df_mean = df.groupby(['method']).mean()
+    df_mean = df_mean.style.highlight_max(color='lightgray').format(precision=3)
+
+    df_std = df.groupby(['method']).std()
+    df_std = df_std.style.highlight_min(color='lightgray').format(precision=3)
+
+    # exporting
+    dfi.export(df_mean, path_mean)
+    dfi.export(df_std, path_std)
