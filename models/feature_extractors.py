@@ -9,6 +9,7 @@ from torchvision import transforms
 from ctypes import ArgumentError
 from models.med_al_ssl_surgery.simclr_arch import SimCLRArch
 
+# source: https://pytorch.org/hub/facebookresearch_semi-supervised-ImageNet1K-models_resnext/
 def get_feature_extractor_imagenet(architecture: str) -> tuple:
     model = None
     preprocess = None
