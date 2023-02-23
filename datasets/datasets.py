@@ -134,11 +134,12 @@ class ImageDataset(torch.utils.data.Dataset):
         for i, key in enumerate(keys):
             self.features[key] = X_new[i]
 
-class MatekDataset(ImageDataset):
+
+class ImageDatasetWithFolderStructure(ImageDataset):
     def __init__(
             self, 
             split, 
-            dataset_root_dir='/content/drive/MyDrive/master thesis/datasets/ssl_vs_al/data/matek',
+            dataset_root_dir,
             preprocess=None,
             features_path=None,
             load_images=True,
@@ -159,3 +160,41 @@ class MatekDataset(ImageDataset):
                 self.images_data['labels_text'].append(label_text)
                 self.images_data['labels'].append(self.labels_text_mapping[label_text])
                 self.images_data['paths'].append(os.path.join(label_dir, f.name))
+
+
+class MatekDataset(ImageDataset):
+    def __init__(
+            self, 
+            split, 
+            dataset_root_dir='/content/drive/MyDrive/master thesis/datasets/ssl_vs_al/data/matek',
+            preprocess=None,
+            features_path=None,
+            load_images=True,
+    ):
+        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
+
+
+class IsicDataset(ImageDataset):
+    def __init__(
+            self, 
+            split, 
+            dataset_root_dir='/content/drive/MyDrive/master thesis/datasets/ssl_vs_al/data/isic',
+            preprocess=None,
+            features_path=None,
+            load_images=True,
+    ):
+        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
+
+class RetinopathyDataset(ImageDataset):
+    def __init__(
+            self, 
+            split, 
+            dataset_root_dir='/content/drive/MyDrive/master thesis/datasets/ssl_vs_al/data/retinopathy',
+            preprocess=None,
+            features_path=None,
+            load_images=True,
+    ):
+        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
+
+# TODO
+# class JurkatDataset(ImageDataset):
