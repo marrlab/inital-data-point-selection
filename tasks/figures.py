@@ -9,12 +9,23 @@ from utils.utils import load_dataframes
 from scipy.stats import entropy
 from utils.types import Result
 from utils.utils import result_to_dataframe, get_runs
+from copy import deepcopy
 
 
 def subsetting_methods_performance_preprocessing(result: Result) -> pd.DataFrame:
     df = result_to_dataframe(result)
     df = df.groupby(['method']).mean()
     df = df.div(df.sum(axis=1), axis=0)
+    
+    def rename_method(method: str) -> str:
+        if method.startswith('badge_'):
+            method = method[6:]
+            method = method.replace('_', ' ')
+
+        return method
+
+    df = df[df.index != 'true']
+    df.index = df.index.map(rename_method)
 
     return df
 
@@ -97,7 +108,7 @@ def cluster_data_points_analysis(result_path: str, path: str = None):
     dfi.export(result_df, path)
 
 
-def classification_metrics(dataset_name: str, path_mean: str, path_std):
+def classification_metrics(dataset_name: str, path_mean: str=None, path_std: str=None, path_mean_std: str=None):
     wandb.login(key='a29d7c338a594e427f18a0f1502e5a8f36e9adfb')
     api = wandb.Api()
 
@@ -185,11 +196,28 @@ def classification_metrics(dataset_name: str, path_mean: str, path_std):
 
     # computing statistics
     df_mean = df.groupby(['method']).mean()
-    df_mean = df_mean.style.highlight_max(color='lightgray').format(precision=3)
+    df_mean = df_mean.sort_values(by='f1 macro', ascending=False)
+    df_mean_style = df_mean.style.highlight_max(color='lightgray').format(precision=2)
 
     df_std = df.groupby(['method']).std()
-    df_std = df_std.style.highlight_min(color='lightgray').format(precision=3)
+    df_std = df_std.loc[df_mean.index] 
+    df_std_style = df_std.style.highlight_min(color='lightgray').format(precision=2)
+
+    # combining statistics
+    def round_and_convert(df: pd.DataFrame) -> pd.DataFrame:
+        for c in df.columns.to_list():
+            df[c] = df[c].map('{:.2f}'.format)
+
+        return df
+
+    df_mean_std = round_and_convert(df_mean) + u'\u00B1' + round_and_convert(df_std)
 
     # exporting
-    dfi.export(df_mean, path_mean)
-    dfi.export(df_std, path_std)
+    if path_mean is not None:
+        dfi.export(df_mean_style, path_mean)
+
+    if path_std is not None:
+        dfi.export(df_std_style, path_std)
+
+    if path_mean_std is not None:
+        dfi.export(df_mean_std, path_mean_std)
