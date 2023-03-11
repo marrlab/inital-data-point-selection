@@ -1,4 +1,5 @@
 
+import yaml
 import torch
 import wandb
 import pandas as pd
@@ -68,3 +69,10 @@ def get_runs(project: str) -> pd.DataFrame:
     })
 
     return runs_df
+
+def load_yaml_as_dict(yaml_path: str) -> dict:
+    d = None
+    with open(yaml_path, 'r') as f:
+        d = yaml.load(f, Loader=yaml.FullLoader)
+
+    return d

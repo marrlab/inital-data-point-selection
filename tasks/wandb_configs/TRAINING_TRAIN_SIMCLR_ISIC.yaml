@@ -1,0 +1,10 @@
+
+# isic small test
+dataset: isic 
+batch_size: 256
+input_size: 256
+epochs: 100
+seed: 1
+num_workers: 6
+imagenet_weights: True
+model_save_path: models/data/simclr_isic.ckpt

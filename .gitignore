@@ -129,3 +129,12 @@ dmypy.json
 .pyre/
 
 .DS_Store
+
+# don't version the actual data
+datasets/data/
+models/data/
+
+# library directories
+lightning_logs/
+wandb/
+

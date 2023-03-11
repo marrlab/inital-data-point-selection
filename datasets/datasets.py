@@ -166,7 +166,7 @@ class MatekDataset(ImageDataset):
     def __init__(
             self, 
             split, 
-            dataset_root_dir='/content/drive/MyDrive/master thesis/datasets/ssl_vs_al/data/matek',
+            dataset_root_dir='datasets/data/matek',
             preprocess=None,
             features_path=None,
             load_images=True,
@@ -178,7 +178,18 @@ class IsicDataset(ImageDataset):
     def __init__(
             self, 
             split, 
-            dataset_root_dir='/content/drive/MyDrive/master thesis/datasets/ssl_vs_al/data/isic',
+            dataset_root_dir='datasets/data/isic',
+            preprocess=None,
+            features_path=None,
+            load_images=True,
+    ):
+        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
+
+class IsicSmallDataset(ImageDataset):
+    def __init__(
+            self, 
+            split, 
+            dataset_root_dir='datasets/data/isic_small',
             preprocess=None,
             features_path=None,
             load_images=True,
@@ -189,7 +200,7 @@ class RetinopathyDataset(ImageDataset):
     def __init__(
             self, 
             split, 
-            dataset_root_dir='/content/drive/MyDrive/master thesis/datasets/ssl_vs_al/data/retinopathy',
+            dataset_root_dir='datasets/data/retinopathy',
             preprocess=None,
             features_path=None,
             load_images=True,
@@ -198,3 +209,15 @@ class RetinopathyDataset(ImageDataset):
 
 # TODO
 # class JurkatDataset(ImageDataset):
+
+def get_dataset_class_by_name(dataset_name: str):
+    if dataset_name == 'matek':
+        return MatekDataset
+    elif dataset_name == 'isic':
+        return IsicDataset
+    elif dataset_name == 'isic_small':
+        return IsicSmallDataset
+    elif dataset_name == 'retinopathy':
+        return RetinopathyDataset
+    else:
+        raise ValueError(f'unknown dataset name: {dataset_name}')
