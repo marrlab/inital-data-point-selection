@@ -76,3 +76,14 @@ def load_yaml_as_dict(yaml_path: str) -> dict:
         d = yaml.load(f, Loader=yaml.FullLoader)
 
     return d
+
+def load_yaml_as_obj(yaml_path: str) -> object:
+    d = load_yaml_as_dict(yaml_path)
+
+    class Struct:
+        def __init__(self, **entries): 
+            self.__dict__.update(entries)
+
+    obj = Struct(**d)
+
+    return obj

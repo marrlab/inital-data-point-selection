@@ -1,0 +1,8 @@
+
+# isic small test
+dataset: retinopathy 
+batch_size: 256
+input_size: 256
+num_workers: 6
+model_save_path: models/data/simclr_retinopathy_500.ckpt
+features_save_path: models/data/simclr_retinopathy_500_features.csv

@@ -1,0 +1,8 @@
+
+# isic small test
+dataset: isic 
+batch_size: 256
+input_size: 256
+num_workers: 6
+model_save_path: models/data/simclr_isic_500.ckpt
+features_save_path: models/data/simclr_isic_500_features.csv
