@@ -114,7 +114,8 @@ def cluster_data_points_analysis(result_path: str, path: str = None):
     dfi.export(result_df, path)
 
 
-def classification_metrics(dataset_name: str, path_mean: str=None, path_std: str=None, path_mean_std: str=None):
+# def classification_metrics(dataset_name: str, path_mean: str=None, path_std: str=None, path_mean_std: str=None):
+def classification_metrics(config: object):
     wandb.login(key='a29d7c338a594e427f18a0f1502e5a8f36e9adfb')
     api = wandb.Api()
 
@@ -136,7 +137,7 @@ def classification_metrics(dataset_name: str, path_mean: str=None, path_std: str
 
     # random baseline
     def filter_run_random(row):
-        if row['config']['dataset'] != dataset_name:
+        if row['config']['dataset'] != config.dataset:
             return False
 
         if 'epoch' not in row['summary'] or row['summary']['epoch'] != 29:
@@ -166,7 +167,10 @@ def classification_metrics(dataset_name: str, path_mean: str=None, path_std: str
     
     # badge sampling
     def filter_run_badge(row):
-        if row['config']['dataset'] != dataset_name:
+        if row['config']['dataset'] != config.dataset:
+            return False
+
+        if row['config']['features_path'] != config.features_path:
             return False
 
         if 'feature_scaling' not in row['config'] or row['config']['feature_scaling'] != 'standard':
@@ -219,18 +223,13 @@ def classification_metrics(dataset_name: str, path_mean: str=None, path_std: str
     df_mean_std = round_and_convert(df_mean) + u'\u00B1' + round_and_convert(df_std)
 
     # exporting
-    if path_mean is not None:
-        dfi.export(df_mean_style, path_mean)
+    os.mkdir(config.output_dir)
 
-    if path_std is not None:
-        dfi.export(df_std_style, path_std)
+    dfi.export(df_mean_style, os.path.join(config.output_dir, 'mean.png'))
+    dfi.export(df_std_style, os.path.join(config.output_dir, 'std.png'))
+    dfi.export(df_mean_std, os.path.join(config.output_dir, 'mean_std.png'))
 
-    if path_mean_std is not None:
-        dfi.export(df_mean_std, path_mean_std)
-
-def umap_features(config_path: str):
-    config = load_yaml_as_obj(config_path)
-
+def umap_features(config: object):
     # loading dataset
     dataset_class = get_dataset_class_by_name(config.dataset)
     dataset = dataset_class('train', load_images=False, features_path=config.features_path)
@@ -273,8 +272,13 @@ def umap_features(config_path: str):
 if __name__ == '__main__':
     task_name = sys.argv[1]
     config_path = sys.argv[2] 
+
+    config = load_yaml_as_obj(config_path)
+
     if task_name == 'umap_features':
-        umap_features(config_path)
+        umap_features(config)
+    elif task_name == 'classification_metrics':
+        classification_metrics(config)
     else:
         raise ValueError(f'unknown task name: {task_name}')
     

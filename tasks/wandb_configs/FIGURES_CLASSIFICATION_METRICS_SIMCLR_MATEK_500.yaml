@@ -1,0 +1,4 @@
+
+dataset: matek
+features_path: models/data/simclr_matek_500_features.csv
+output_dir: tasks/data/figures_classification_metrics_simclr_matek_500
