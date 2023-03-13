@@ -223,7 +223,7 @@ def classification_metrics(config: object):
     df_mean_std = round_and_convert(df_mean) + u'\u00B1' + round_and_convert(df_std)
 
     # exporting
-    os.mkdir(config.output_dir)
+    os.makedirs(config.output_dir, exist_ok=True)
 
     dfi.export(df_mean_style, os.path.join(config.output_dir, 'mean.png'))
     dfi.export(df_std_style, os.path.join(config.output_dir, 'std.png'))
@@ -246,7 +246,7 @@ def umap_features(config: object):
     xs, ys, zs = np.array(xs), np.array(ys), np.array(zs)
 
     # creating the folder to save things
-    os.mkdir(config.output_dir)
+    os.makedirs(config.output_dir, exist_ok=True)
 
     def run_umap(n_neighbors, min_dist):
         reducer = umap.UMAP(n_neighbors=n_neighbors, min_dist=min_dist)
