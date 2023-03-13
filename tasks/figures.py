@@ -1,4 +1,8 @@
 
+import os
+import sys
+import umap
+import umap.plot
 import wandb
 import pandas as pd
 import seaborn as sns
@@ -8,6 +12,8 @@ import dataframe_image as dfi
 from utils.utils import load_dataframes
 from scipy.stats import entropy
 from utils.types import Result
+from utils.utils import load_yaml_as_obj
+from datasets.datasets import get_dataset_class_by_name
 from utils.utils import result_to_dataframe, get_runs
 from copy import deepcopy
 
@@ -221,3 +227,54 @@ def classification_metrics(dataset_name: str, path_mean: str=None, path_std: str
 
     if path_mean_std is not None:
         dfi.export(df_mean_std, path_mean_std)
+
+def umap_features(config_path: str):
+    config = load_yaml_as_obj(config_path)
+
+    # loading dataset
+    dataset_class = get_dataset_class_by_name(config.dataset)
+    dataset = dataset_class('train', load_images=False, features_path=config.features_path)
+    if config.standard_scale_features:
+        dataset.standard_scale_features()
+
+    # getting features to numpy
+    xs, ys, zs = [], [], []
+    for i in range(len(dataset.features)):
+        xs.append(dataset.features[dataset.images_data['names'][i]])
+        ys.append(dataset.images_data['labels'][i])
+        zs.append(dataset.images_data['labels_text'][i])
+
+    xs, ys, zs = np.array(xs), np.array(ys), np.array(zs)
+
+    # creating the folder to save things
+    os.mkdir(config.output_dir)
+
+    def run_umap(n_neighbors, min_dist):
+        reducer = umap.UMAP(n_neighbors=n_neighbors, min_dist=min_dist)
+        mapper = reducer.fit(xs)
+
+        image_name_prefix = f'n_neighbors={n_neighbors},min_dist={min_dist}'
+
+        umap.plot.points(mapper, cmap='Greys')
+        plt.savefig(os.path.join(config.output_dir, f'{image_name_prefix}_grey.png'), bbox_inches='tight')
+
+        umap.plot.points(mapper, labels=zs, background='white')
+        plt.savefig(os.path.join(config.output_dir, f'{image_name_prefix}_labels.png'), bbox_inches='tight')
+
+    # creating umap images
+    n_neighbors_options = [2, 5, 10, 20, 50, 100, 200, 1000]
+    min_dist_options = [0.0, 0.01, 0.1, 0.25, 0.5, 0.8, 0.99]
+
+    for n_neighbors in n_neighbors_options:
+        for min_dist in min_dist_options:
+            run_umap(n_neighbors, min_dist)
+
+
+if __name__ == '__main__':
+    task_name = sys.argv[1]
+    config_path = sys.argv[2] 
+    if task_name == 'umap_features':
+        umap_features(config_path)
+    else:
+        raise ValueError(f'unknown task name: {task_name}')
+    

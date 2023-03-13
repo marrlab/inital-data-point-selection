@@ -1,0 +1,5 @@
+
+dataset: matek 
+features_path: models/data/simclr_matek_500_features.csv
+standard_scale_features: True
+output_dir: tasks/data/figures_umap_features_simclr_matek_500

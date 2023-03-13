@@ -1,0 +1,5 @@
+
+dataset: retinopathy 
+features_path: models/data/simclr_retinopathy_500_features.csv
+standard_scale_features: True
+output_dir: tasks/data/figures_umap_features_simclr_retinopathy_500

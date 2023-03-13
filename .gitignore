@@ -133,6 +133,7 @@ dmypy.json
 # don't version the actual data
 datasets/data/
 models/data/
+tasks/data/
 
 # library directories
 lightning_logs/
