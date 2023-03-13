@@ -9,7 +9,7 @@ from lightly.data import LightlyDataset, SimCLRCollateFunction, collate
 from models.lightning_modules import ImageClassifierLightningModule, SimCLRModel
 from datasets.datasets import ImageDataset
 from datasets.datasets import get_dataset_class_by_name
-from utils.utils import load_yaml_as_dict
+from utils.utils import load_yaml_as_dict, load_yaml_as_obj
 
 
 def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, val_dataset: ImageDataset):
@@ -65,22 +65,18 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
 
 
 # TODO: try with other self-supervised models
-def train_simclr(config_path: str):
-    # wandb init
-    config = load_yaml_as_dict(config_path)
-    run = wandb.init(project='train-simclr', config=config)
-
-    pl.seed_everything(run.config.seed)
+def train_simclr():
+    pl.seed_everything(wandb.config.seed)
 
     # creating datasets
-    dataset_class = get_dataset_class_by_name(run.config.dataset)
+    dataset_class = get_dataset_class_by_name(wandb.config.dataset)
     train_dataset = dataset_class('train')
     val_dataset = dataset_class('test')
 
     # we create a torchvision transformation for embedding the dataset after training
     val_transforms = torchvision.transforms.Compose([
         torchvision.transforms.Resize(
-            (run.config.input_size, run.config.input_size)),
+            (wandb.config.input_size, wandb.config.input_size)),
         torchvision.transforms.ToTensor(),
         torchvision.transforms.Normalize(
             mean=collate.imagenet_normalize['mean'],
@@ -100,32 +96,32 @@ def train_simclr(config_path: str):
 
     # augmentations for simclr
     collate_fn = SimCLRCollateFunction(
-        input_size=run.config.input_size,
+        input_size=wandb.config.input_size,
         vf_prob=0.5,
         rr_prob=0.5
     )
 
     train_data_loader = torch.utils.data.DataLoader(
         train_dataset_lightly,
-        batch_size=run.config.batch_size,
+        batch_size=wandb.config.batch_size,
         shuffle=True,
         collate_fn=collate_fn,
         drop_last=True,
-        num_workers=run.config.num_workers
+        num_workers=wandb.config.num_workers
     )
 
     val_data_loader = torch.utils.data.DataLoader(
         val_dataset_lightly,
-        batch_size=run.config.batch_size,
+        batch_size=wandb.config.batch_size,
         shuffle=False,
         drop_last=False,
-        num_workers=run.config.num_workers
+        num_workers=wandb.config.num_workers
     )
 
     # defining the model
     lightning_model = SimCLRModel(
-        max_epochs=run.config.epochs,
-        imagenet_weights=run.config.imagenet_weights,
+        max_epochs=wandb.config.epochs,
+        imagenet_weights=wandb.config.imagenet_weights,
     )
 
     # wandb connection (assumes wandb.init has been called before)
@@ -133,7 +129,7 @@ def train_simclr(config_path: str):
     wandb_logger.watch(lightning_model)
 
     trainer = pl.Trainer(
-        max_epochs=run.config.epochs,
+        max_epochs=wandb.config.epochs,
         accelerator='gpu' if torch.cuda.is_available() else 'cpu',
         devices=1,
         logger=wandb_logger,
@@ -147,16 +143,20 @@ def train_simclr(config_path: str):
     )
 
     # saving the final model
-    trainer.save_checkpoint(run.config.model_save_path, weights_only=True)
-
-    # wandb wrapping-up
-    wandb.finish()
+    trainer.save_checkpoint(wandb.config.model_save_path, weights_only=True)
 
 
 if __name__ == '__main__':
     task_name = sys.argv[1]
     config_path = sys.argv[2] 
+
+    config = load_yaml_as_dict(config_path)
+
     if task_name == 'train_simclr':
-        train_simclr(config_path)
+        wandb.init(project='train-simclr', config=config)
+        train_simclr()
     else:
         raise ValueError(f'unknown task name: {task_name}')
+
+    # wandb wrapping-up
+    wandb.finish()

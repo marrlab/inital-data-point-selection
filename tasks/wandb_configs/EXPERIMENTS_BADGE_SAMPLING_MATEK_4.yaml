@@ -1,0 +1,11 @@
+
+epochs: 30
+learning_rate: 0.0001
+batch_size: 16
+architecture: resnet18_swsl
+dataset: matek
+train_samples: 100
+features_path: models/data/simclr_matek_500_features.csv
+mode: kmeans++
+criterium: furthest
+feature_scaling: standard

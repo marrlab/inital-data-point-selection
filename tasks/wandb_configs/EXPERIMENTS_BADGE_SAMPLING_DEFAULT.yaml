@@ -1,0 +1,11 @@
+
+epochs: 30
+learning_rate: 0.0001
+batch_size: 16
+architecture: resnet18_swsl
+dataset: isic_small
+train_samples: 100
+features_path: models/data/isic_small_test_features.csv
+mode: kmeans
+criterium: closest
+feature_scaling: standard

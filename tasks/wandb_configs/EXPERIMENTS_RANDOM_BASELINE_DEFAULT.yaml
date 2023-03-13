@@ -1,0 +1,7 @@
+
+epochs: 30 
+learning_rate: 0.0001
+batch_size: 16
+architecture: resnet18_swsl
+dataset: isic_small 
+train_samples: 100

@@ -1,35 +1,27 @@
 
+import sys
 import copy
 import wandb
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from datasets.datasets import ImageDataset, MatekDataset
+from datasets.datasets import get_dataset_class_by_name
 from models.classifiers import \
     get_classifier_imagenet, get_classifier_imagenet_preprocess_only
 from datasets.subsets import get_n_random, get_n_kmeans
 from tasks.training import train_image_classifier
 from sklearn.cluster import kmeans_plusplus, KMeans
+from utils.utils import load_yaml_as_dict, load_yaml_as_obj
 
 
-# wandb.config requirements:
-# .epochs
-# .learning_rate
-# .batch_size
-# .architecture
-# .dataset
-# .train_samples
-# .val_samples
 def random_baseline():
-    assert wandb.config.dataset in ('matek')
-
     preprocess = get_classifier_imagenet_preprocess_only(
         wandb.config.architecture)
 
-    train_dataset, val_dataset = None, None
-    if wandb.config.dataset == 'matek':
-        train_dataset = MatekDataset('train', preprocess=preprocess)
-        val_dataset = MatekDataset('test', preprocess=preprocess)
+    dataset_class = get_dataset_class_by_name(wandb.config.dataset)
+    train_dataset = dataset_class('train', preprocess=preprocess)
+    val_dataset = dataset_class('test', preprocess=preprocess)
 
     train_subset = get_n_random(train_dataset, wandb.config.train_samples)
     train_subset.relabel()
@@ -38,7 +30,6 @@ def random_baseline():
 
     val_subset = copy.deepcopy(val_dataset)
     val_subset.match_labels_and_filter(train_subset)
-    val_subset = get_n_random(val_subset, wandb.config.val_samples)
 
     num_classes = len(train_subset.labels)
     model, _ = get_classifier_imagenet(wandb.config.architecture, num_classes)
@@ -58,17 +49,14 @@ def random_baseline():
 # .mode
 # .criterium
 def badge_sampling():
-    assert wandb.config.dataset in ('matek')
     assert 'feature_scaling' not in wandb.config or wandb.config.feature_scaling in ('standard', 'min_max')
 
     preprocess = get_classifier_imagenet_preprocess_only(
         wandb.config.architecture)
 
-    train_dataset, val_dataset = None, None
-    if wandb.config.dataset == 'matek':
-        train_dataset = MatekDataset(
-            'train', preprocess=preprocess, features_path=wandb.config.features_path)
-        val_dataset = MatekDataset('test', preprocess=preprocess)
+    dataset_class = get_dataset_class_by_name(wandb.config.dataset)
+    train_dataset = dataset_class('train', preprocess=preprocess, features_path=wandb.config.features_path)
+    val_dataset = dataset_class('test', preprocess=preprocess)
 
     if 'feature_scaling' in wandb.config:
         if wandb.config.feature_scaling == 'standard':
@@ -84,7 +72,6 @@ def badge_sampling():
 
     val_subset = copy.deepcopy(val_dataset)
     val_subset.match_labels_and_filter(train_subset)
-    val_subset = get_n_random(val_subset, wandb.config.val_samples)
 
     num_classes = len(train_subset.labels)
     model, _ = get_classifier_imagenet(wandb.config.architecture, num_classes)
@@ -151,3 +138,21 @@ def cluster_data_points_analysis(dataset: ImageDataset, clusters: int) -> pd.Dat
         'distance_to_cluster_center': distances_to_cluster_centers
     })
 
+if __name__ == '__main__':
+    task_name = sys.argv[1]
+    config_path = sys.argv[2] 
+
+    config = load_yaml_as_dict(config_path)
+
+    if task_name == 'random_baseline':
+        wandb.init(project='random-baseline', config=config)
+        random_baseline()
+    elif task_name == 'badge_sampling':
+        wandb.init(project='badge-sampling', config=config)
+        badge_sampling()
+    else:
+        raise ValueError(f'unknown task name: {task_name}')
+
+    # wandb wrapping-up
+    wandb.finish()
+    
