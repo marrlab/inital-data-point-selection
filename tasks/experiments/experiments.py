@@ -10,7 +10,7 @@ from datasets.datasets import get_dataset_class_by_name
 from models.classifiers import \
     get_classifier_imagenet, get_classifier_imagenet_preprocess_only
 from datasets.subsets import get_n_random, get_n_kmeans
-from tasks.training import train_image_classifier
+from tasks.training.training import train_image_classifier
 from sklearn.cluster import kmeans_plusplus, KMeans
 from utils.utils import load_yaml_as_dict, load_yaml_as_obj
 

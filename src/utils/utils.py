@@ -5,7 +5,7 @@ import wandb
 import tempfile
 import pandas as pd
 from typing import Iterable
-from utils.types import Result
+from src.utils.types import Result
 from pdflatex import PDFLaTeX
 from pdfCropMargins import crop
 
