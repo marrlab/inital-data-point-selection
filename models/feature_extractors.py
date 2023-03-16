@@ -4,10 +4,10 @@ import torch
 import torchvision
 import numpy as np
 from tqdm import tqdm
-from src.models.helpers import Identity
+from models.helpers import Identity
 from torchvision import transforms
 from ctypes import ArgumentError
-from src.models.med_al_ssl_surgery.simclr_arch import SimCLRArch
+from models.med_al_ssl_surgery.simclr_arch import SimCLRArch
 
 # source: https://pytorch.org/hub/facebookresearch_semi-supervised-ImageNet1K-models_resnext/
 def get_feature_extractor_imagenet(architecture: str) -> tuple:

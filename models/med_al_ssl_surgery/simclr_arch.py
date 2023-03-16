@@ -1,5 +1,5 @@
 import torch.nn as nn
-from src.models.med_al_ssl_surgery.resnet import resnet18
+from models.med_al_ssl_surgery.resnet import resnet18
 import torchvision.models as models
 
 

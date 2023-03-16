@@ -3,7 +3,7 @@ import torch
 import copy
 import random
 import numpy as np
-from src.datasets.datasets import ImageDataset
+from datasets.datasets import ImageDataset
 from typing import List, Tuple, Union
 from sklearn.cluster import kmeans_plusplus, KMeans
 from sklearn.metrics import pairwise_distances_argmin_min

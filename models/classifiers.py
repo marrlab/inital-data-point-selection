@@ -1,7 +1,7 @@
 
 import torch
-from src.models.feature_extractors import get_feature_extractor_imagenet
-from src.models.helpers import get_output_dim
+from models.feature_extractors import get_feature_extractor_imagenet
+from models.helpers import get_output_dim
 
 def get_classifier_imagenet(architecture: str, num_classes: int) -> tuple:
     model, preprocess = get_feature_extractor_imagenet(architecture)
