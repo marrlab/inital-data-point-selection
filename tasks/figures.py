@@ -13,6 +13,7 @@ from utils.utils import load_dataframes
 from scipy.stats import entropy
 from utils.types import Result
 from utils.utils import load_yaml_as_obj
+from utils.utils import load_yaml_as_obj, latex_to_pdf
 from datasets.datasets import get_dataset_class_by_name
 from utils.utils import result_to_dataframe, get_runs
 from copy import deepcopy
@@ -22,7 +23,7 @@ def subsetting_methods_performance_preprocessing(result: Result) -> pd.DataFrame
     df = result_to_dataframe(result)
     df = df.groupby(['method']).mean()
     df = df.div(df.sum(axis=1), axis=0)
-    
+
     def rename_method(method: str) -> str:
         if method.startswith('badge_'):
             method = method[6:]
@@ -40,9 +41,10 @@ def subsetting_methods_performance_heatmap(result: Result, path: str = None):
     df = subsetting_methods_performance_preprocessing(result)
     df *= 100
 
-    _, ax = plt.subplots(figsize=(15,5))
+    _, ax = plt.subplots(figsize=(15, 5))
 
-    sns.heatmap(df, annot=True, annot_kws={'fontsize': 13}, fmt='.1f', linewidths=.5, cmap='gray_r', ax=ax)
+    sns.heatmap(df, annot=True, annot_kws={
+                'fontsize': 13}, fmt='.1f', linewidths=.5, cmap='gray_r', ax=ax)
 
     if path is not None:
         plt.savefig(path, bbox_inches='tight')
@@ -67,8 +69,10 @@ def subsetting_methods_performance_entropy(result: Result, path: str):
 def cluster_data_points_analysis(result_path: str, path: str = None):
     df = load_dataframes([result_path], contains_index=False)[0]
 
-    cluster_label_counts = df.groupby(['cluster_label', 'label'])['cluster_label'].count().to_dict()
-    cluster_label_min_distances = df.groupby(['cluster_label', 'label'])['distance_to_cluster_center'].min().to_dict()
+    cluster_label_counts = df.groupby(['cluster_label', 'label'])[
+        'cluster_label'].count().to_dict()
+    cluster_label_min_distances = df.groupby(['cluster_label', 'label'])[
+        'distance_to_cluster_center'].min().to_dict()
 
     clusters_count = len(df['cluster_label'].unique())
     labels_count = len(df['label'].unique())
@@ -78,13 +82,15 @@ def cluster_data_points_analysis(result_path: str, path: str = None):
     cluster_labels_entropy = []
     for c in range(clusters_count):
         labels_distribution = np.array([
-            cluster_label_counts[(c, l)] if (c, l) in cluster_label_counts else 0
+            cluster_label_counts[(c, l)] if (
+                c, l) in cluster_label_counts else 0
             for l in range(labels_count)
         ])
         labels_distribution = labels_distribution / np.sum(labels_distribution)
-        
+
         labels_distances = np.array([
-            cluster_label_min_distances[(c, l)] if (c, l) in cluster_label_min_distances else np.inf
+            cluster_label_min_distances[(c, l)] if (
+                c, l) in cluster_label_min_distances else np.inf
             for l in range(labels_count)
         ])
 
@@ -108,7 +114,7 @@ def cluster_data_points_analysis(result_path: str, path: str = None):
     result_df = result_df[1:]
     result_df = result_df.astype({
         'label_with_min_distance': int,
-        'majority_label': int 
+        'majority_label': int
     })
 
     dfi.export(result_df, path)
@@ -128,11 +134,11 @@ def classification_metrics(config: object):
         'val_cohen_kappa_score_max'
     ]
     required_metrics_name = [
-        'accuracy',
-        'f1 macro',
-        'balanced accuracy',
-        'matthews corrcoef',
-        'cohen kappa score'
+        'ACC',
+        'F1 MACRO',
+        'BA',
+        'MCC',
+        'CKS'
     ]
 
     # random baseline
@@ -142,18 +148,18 @@ def classification_metrics(config: object):
 
         if 'epoch' not in row['summary'] or row['summary']['epoch'] != 29:
             return False
-        
+
         if any(rm not in row['summary'] for rm in required_metrics):
             return False
-        
+
         return True
-    
+
     def transform_runs_random(df):
         for i in range(len(required_metrics)):
             df[required_metrics_name[i]] = \
                 df.apply(lambda r: r['summary'][required_metrics[i]], axis=1)
 
-        df['classes'] = df.apply(lambda r: r['config']['num_classes'], axis=1)
+        df['CLASSES'] = df.apply(lambda r: r['config']['num_classes'], axis=1)
 
         df = df.drop(['name', 'summary', 'config'], axis=1)
 
@@ -164,7 +170,7 @@ def classification_metrics(config: object):
     df_random = df_random[filtered_rows]
     df_random = transform_runs_random(df_random)
     df_random['method'] = 'random'
-    
+
     # badge sampling
     def filter_run_badge(row):
         if row['config']['dataset'] != config.dataset:
@@ -178,19 +184,20 @@ def classification_metrics(config: object):
 
         if 'epoch' not in row['summary'] or row['summary']['epoch'] != 29:
             return False
-        
+
         if any(rm not in row['summary'] for rm in required_metrics):
             return False
-        
+
         return True
-    
+
     def transform_runs_badge(df):
         for i in range(len(required_metrics)):
             df[required_metrics_name[i]] = \
                 df.apply(lambda r: r['summary'][required_metrics[i]], axis=1)
 
-        df['classes'] = df.apply(lambda r: r['config']['num_classes'], axis=1)
-        df['method'] = df.apply(lambda r: f"{r['config']['mode']} {r['config']['criterium']}", axis=1)
+        df['CLASSES'] = df.apply(lambda r: r['config']['num_classes'], axis=1)
+        df['method'] = df.apply(
+            lambda r: f"{r['config']['mode']} {r['config']['criterium']}", axis=1)
 
         df = df.drop(['name', 'summary', 'config'], axis=1)
 
@@ -206,12 +213,14 @@ def classification_metrics(config: object):
 
     # computing statistics
     df_mean = df.groupby(['method']).mean()
-    df_mean = df_mean.sort_values(by='f1 macro', ascending=False)
-    df_mean_style = df_mean.style.highlight_max(color='lightgray').format(precision=2)
+    df_mean = df_mean.sort_values(by='F1 MACRO', ascending=False)
+    df_mean_style = df_mean.style.highlight_max(
+        props='font-weight:bold;').format(precision=2)
 
     df_std = df.groupby(['method']).std()
-    df_std = df_std.loc[df_mean.index] 
-    df_std_style = df_std.style.highlight_min(color='lightgray').format(precision=2)
+    df_std = df_std.loc[df_mean.index]
+    df_std_style = df_std.style.highlight_min(
+        props='font-weight:bold;').format(precision=2)
 
     # combining statistics
     def round_and_convert(df: pd.DataFrame) -> pd.DataFrame:
@@ -220,19 +229,33 @@ def classification_metrics(config: object):
 
         return df
 
-    df_mean_std = round_and_convert(df_mean) + u'\u00B1' + round_and_convert(df_std)
+    df_mean_std = round_and_convert(
+        df_mean) + u'\u00B1' + round_and_convert(df_std)
+    df_mean_std_style = df_mean_std.style.highlight_max(
+        props='font-weight:bold;').format(precision=2)
 
     # exporting
     os.makedirs(config.output_dir, exist_ok=True)
 
-    dfi.export(df_mean_style, os.path.join(config.output_dir, 'mean.png'))
-    dfi.export(df_std_style, os.path.join(config.output_dir, 'std.png'))
-    dfi.export(df_mean_std, os.path.join(config.output_dir, 'mean_std.png'))
+    df_mean_style.to_latex(buf=os.path.join(
+        config.output_dir, 'df_mean.tex'), hrules=True, convert_css=True)
+    latex_to_pdf(os.path.join(config.output_dir, 'df_mean.tex'),
+                 os.path.join(config.output_dir, 'df_mean.pdf'))
+    df_std_style.to_latex(buf=os.path.join(
+        config.output_dir, 'df_std.tex'), hrules=True, convert_css=True)
+    latex_to_pdf(os.path.join(config.output_dir, 'df_std.tex'),
+                 os.path.join(config.output_dir, 'df_std.pdf'))
+    df_mean_std_style.to_latex(buf=os.path.join(
+        config.output_dir, 'df_mean_std.tex'), hrules=True, convert_css=True)
+    latex_to_pdf(os.path.join(config.output_dir, 'df_mean_std.tex'),
+                 os.path.join(config.output_dir, 'df_mean_std.pdf'))
+
 
 def umap_features(config: object):
     # loading dataset
     dataset_class = get_dataset_class_by_name(config.dataset)
-    dataset = dataset_class('train', load_images=False, features_path=config.features_path)
+    dataset = dataset_class('train', load_images=False,
+                            features_path=config.features_path)
     if config.standard_scale_features:
         dataset.standard_scale_features()
 
@@ -255,10 +278,12 @@ def umap_features(config: object):
         image_name_prefix = f'n_neighbors={n_neighbors},min_dist={min_dist}'
 
         umap.plot.points(mapper, cmap='Greys')
-        plt.savefig(os.path.join(config.output_dir, f'{image_name_prefix}_grey.png'), bbox_inches='tight')
+        plt.savefig(os.path.join(config.output_dir,
+                    f'{image_name_prefix}_grey.png'), bbox_inches='tight')
 
         umap.plot.points(mapper, labels=zs, background='white')
-        plt.savefig(os.path.join(config.output_dir, f'{image_name_prefix}_labels.png'), bbox_inches='tight')
+        plt.savefig(os.path.join(config.output_dir,
+                    f'{image_name_prefix}_labels.png'), bbox_inches='tight')
 
     # creating umap images
     n_neighbors_options = [2, 5, 10, 20, 50, 100, 200, 1000]
@@ -271,7 +296,7 @@ def umap_features(config: object):
 
 if __name__ == '__main__':
     task_name = sys.argv[1]
-    config_path = sys.argv[2] 
+    config_path = sys.argv[2]
 
     config = load_yaml_as_obj(config_path)
 
@@ -281,4 +306,3 @@ if __name__ == '__main__':
         classification_metrics(config)
     else:
         raise ValueError(f'unknown task name: {task_name}')
-    

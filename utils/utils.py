@@ -2,9 +2,12 @@
 import yaml
 import torch
 import wandb
+import tempfile
 import pandas as pd
 from typing import Iterable
 from utils.types import Result
+from pdflatex import PDFLaTeX
+from pdfCropMargins import crop
 
 def flatten_tensor_dicts(ds):
     keys = list(ds[0].keys())
@@ -87,3 +90,37 @@ def load_yaml_as_obj(yaml_path: str) -> object:
     obj = Struct(**d)
 
     return obj
+ 
+def latex_to_pdf(latex_path: str, pdf_path: str, packages: Iterable[str] = ['booktabs']):
+    # loading latex element from a file
+    latex_element = ''
+    with open(latex_path, 'r') as f:
+        latex_element = f.read()
+
+    # composing latex document
+    latex_full = ''
+    latex_full += r'\documentclass{article}'
+    latex_full += r'\pagestyle{empty}'
+    latex_full += '\n'.join(r'\usepackage{' + package + r'}' for package in packages)
+    latex_full += r'\begin{document}'
+    latex_full += latex_element
+    latex_full += r'\end{document}'
+
+    # saving the latex document into a temporary file
+    tmp = tempfile.NamedTemporaryFile(suffix='.tex')
+    with open(tmp.name, 'w') as f:
+        f.write(latex_full)
+
+    # compiling a pdf
+    with open(tmp.name, 'rb') as f:
+        pdfl = PDFLaTeX.from_binarystring(f.read(), 'latex_to_pdf')
+
+    pdf, _, _ = pdfl.create_pdf()
+
+    # saving the pdf into a temporary file
+    tmp = tempfile.NamedTemporaryFile(suffix='.pdf')
+    with open(tmp.name, 'wb') as f:
+        f.write(pdf)
+
+    # cropping the pdf
+    crop(['-p', '0', '-a', '-10', '-o', pdf_path, tmp.name])
