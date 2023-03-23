@@ -1,23 +1,24 @@
 
 import re
+import os
 import csv
 import sys
 import torch
 import logging
+import hydra
 import torchvision
-from models.lightning_modules import SimCLRModel
-from utils.utils import load_yaml_as_obj
-from datasets.datasets import get_dataset_class_by_name
+from omegaconf import DictConfig
+from hydra.utils import get_original_cwd
+from src.models.lightning_modules import SimCLRModel
+from src.datasets.datasets import get_dataset_class_by_name
 from lightly.data import LightlyDataset, SimCLRCollateFunction, collate
 
-def extract_features_simclr(config_path: str):
-    # config init
-    config = load_yaml_as_obj(config_path)
-
+@hydra.main(version_base=None, config_path='../../conf', config_name='extract_features_simclr')
+def main(cfg: DictConfig):
     # we create a torchvision transformation for embedding the dataset
     transforms = torchvision.transforms.Compose([
         torchvision.transforms.Resize(
-            (config.input_size, config.input_size)),
+            (cfg.training.input_size, cfg.training.input_size)),
         torchvision.transforms.ToTensor(),
         torchvision.transforms.Normalize(
             mean=collate.imagenet_normalize['mean'],
@@ -26,7 +27,7 @@ def extract_features_simclr(config_path: str):
     ])
 
     # creating datasets
-    dataset_class = get_dataset_class_by_name(config.dataset)
+    dataset_class = get_dataset_class_by_name(cfg.dataset.name)
     dataset = dataset_class('train')
     dataset_lightly = LightlyDataset(
         input_dir=dataset.images_dir,
@@ -34,14 +35,14 @@ def extract_features_simclr(config_path: str):
     )
     data_loader = torch.utils.data.DataLoader(
         dataset_lightly,
-        batch_size=config.batch_size,
+        batch_size=cfg.training.batch_size,
         shuffle=False,
         drop_last=False,
-        num_workers=config.num_workers
+        num_workers=cfg.training.num_workers
     )
 
     # loading the model and setting it to inference mode
-    model = SimCLRModel.load_from_checkpoint(config.model_save_path)
+    model = SimCLRModel.load_from_checkpoint(os.path.join(get_original_cwd(), cfg.model_save_path))
     model.eval()
 
     features = []
@@ -63,7 +64,7 @@ def extract_features_simclr(config_path: str):
     features = torch.cat(features, 0)
 
     # creating csv file with features
-    with open(config.features_save_path, 'w') as csv_file:
+    with open('features.csv', 'w') as csv_file:
         csv_writer = csv.writer(csv_file)
         csv_writer.writerow(['name', 'label', 'feature'])
         for i in range(len(features)):
@@ -74,9 +75,4 @@ def extract_features_simclr(config_path: str):
             ])
 
 if __name__ == '__main__':
-    task_name = sys.argv[1]
-    config_path = sys.argv[2] 
-    if task_name == 'extract_features_simclr':
-        extract_features_simclr(config_path)
-    else:
-        raise ValueError(f'unknown task name: {task_name}')
+    main()

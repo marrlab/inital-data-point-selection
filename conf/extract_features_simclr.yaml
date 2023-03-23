@@ -1,0 +1,8 @@
+
+defaults:
+  - _self_
+  - dataset: isic_smallest
+  - training: test
+  - hydra: chdir
+
+model_save_path: ''
