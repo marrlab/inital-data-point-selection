@@ -7,6 +7,7 @@ import numpy as np
 from PIL import Image
 from torchvision import transforms
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from hydra.utils import get_original_cwd
 
 
 max_int = sys.maxsize
@@ -148,7 +149,7 @@ class ImageDatasetWithFolderStructure(ImageDataset):
 
         assert split in ('train', 'test')
 
-        self.images_dir = os.path.join(dataset_root_dir, split)
+        self.images_dir = os.path.join(get_original_cwd(), dataset_root_dir, split)
         self.labels_text = sorted([f.name for f in os.scandir(self.images_dir) if f.is_dir()])
         self.labels = list(range(len(self.labels_text)))
         self.labels_text_mapping = {text: id for id, text in enumerate(self.labels_text)}
@@ -162,11 +163,11 @@ class ImageDatasetWithFolderStructure(ImageDataset):
                 self.images_data['paths'].append(os.path.join(label_dir, f.name))
 
 
-class MatekDataset(ImageDataset):
+class MatekDataset(ImageDatasetWithFolderStructure):
     def __init__(
             self, 
             split, 
-            dataset_root_dir='datasets/data/matek',
+            dataset_root_dir='src/datasets/data/matek',
             preprocess=None,
             features_path=None,
             load_images=True,
@@ -174,33 +175,44 @@ class MatekDataset(ImageDataset):
         ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
 
 
-class IsicDataset(ImageDataset):
+class IsicDataset(ImageDatasetWithFolderStructure):
     def __init__(
             self, 
             split, 
-            dataset_root_dir='datasets/data/isic',
+            dataset_root_dir='src/datasets/data/isic',
             preprocess=None,
             features_path=None,
             load_images=True,
     ):
         ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
 
-class IsicSmallDataset(ImageDataset):
+class IsicSmallDataset(ImageDatasetWithFolderStructure):
     def __init__(
             self, 
             split, 
-            dataset_root_dir='datasets/data/isic_small',
+            dataset_root_dir='src/datasets/data/isic_small',
             preprocess=None,
             features_path=None,
             load_images=True,
     ):
         ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
 
-class RetinopathyDataset(ImageDataset):
+class IsicSmallestDataset(ImageDatasetWithFolderStructure):
     def __init__(
             self, 
             split, 
-            dataset_root_dir='datasets/data/retinopathy',
+            dataset_root_dir='src/datasets/data/isic_smallest',
+            preprocess=None,
+            features_path=None,
+            load_images=True,
+    ):
+        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
+
+class RetinopathyDataset(ImageDatasetWithFolderStructure):
+    def __init__(
+            self, 
+            split, 
+            dataset_root_dir='src/datasets/data/retinopathy',
             preprocess=None,
             features_path=None,
             load_images=True,
@@ -217,6 +229,8 @@ def get_dataset_class_by_name(dataset_name: str):
         return IsicDataset
     elif dataset_name == 'isic_small':
         return IsicSmallDataset
+    elif dataset_name == 'isic_smallest':
+        return IsicSmallestDataset
     elif dataset_name == 'retinopathy':
         return RetinopathyDataset
     else:

@@ -1,13 +1,17 @@
 
 import yaml
+import hydra
 import torch
 import wandb
 import tempfile
 import pandas as pd
+from lightning.pytorch.callbacks import ModelCheckpoint
 from typing import Iterable
 from src.utils.types import Result
 from pdflatex import PDFLaTeX
+from lightning.pytorch import loggers as pl_loggers
 from pdfCropMargins import crop
+
 
 def flatten_tensor_dicts(ds):
     keys = list(ds[0].keys())
@@ -43,6 +47,7 @@ def load_dataframes(paths: Iterable[str], contains_index=True) -> Iterable[pd.Da
             for p in paths
         ]
 
+
 def get_runs(project: str) -> pd.DataFrame:
     wandb.login(key='a29d7c338a594e427f18a0f1502e5a8f36e9adfb')
     api = wandb.Api()
@@ -50,16 +55,16 @@ def get_runs(project: str) -> pd.DataFrame:
     runs = api.runs(f'mireczech/{project}')
 
     summary_list, config_list, name_list = [], [], []
-    for run in runs: 
+    for run in runs:
         # .summary contains the output keys/values for metrics like accuracy.
-        #  We call ._json_dict to omit large files 
+        #  We call ._json_dict to omit large files
         summary_list.append(run.summary._json_dict)
-        
+
         # .config contains the hyperparameters.
         #  We remove special values that start with _.
         config_list.append(
-            {k: v for k,v in run.config.items()
-            if not k.startswith('_')}
+            {k: v for k, v in run.config.items()
+             if not k.startswith('_')}
         )
 
         # .name is the human-readable name of the run.
@@ -73,6 +78,7 @@ def get_runs(project: str) -> pd.DataFrame:
 
     return runs_df
 
+
 def load_yaml_as_dict(yaml_path: str) -> dict:
     d = None
     with open(yaml_path, 'r') as f:
@@ -80,17 +86,19 @@ def load_yaml_as_dict(yaml_path: str) -> dict:
 
     return d
 
+
 def load_yaml_as_obj(yaml_path: str) -> object:
     d = load_yaml_as_dict(yaml_path)
 
     class Struct:
-        def __init__(self, **entries): 
+        def __init__(self, **entries):
             self.__dict__.update(entries)
 
     obj = Struct(**d)
 
     return obj
- 
+
+
 def latex_to_pdf(latex_path: str, pdf_path: str, packages: Iterable[str] = ['booktabs']):
     # loading latex element from a file
     latex_element = ''
@@ -101,7 +109,8 @@ def latex_to_pdf(latex_path: str, pdf_path: str, packages: Iterable[str] = ['boo
     latex_full = ''
     latex_full += r'\documentclass{article}'
     latex_full += r'\pagestyle{empty}'
-    latex_full += '\n'.join(r'\usepackage{' + package + r'}' for package in packages)
+    latex_full += '\n'.join(r'\usepackage{' +
+                            package + r'}' for package in packages)
     latex_full += r'\begin{document}'
     latex_full += latex_element
     latex_full += r'\end{document}'

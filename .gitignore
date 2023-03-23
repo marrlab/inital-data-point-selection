@@ -131,11 +131,15 @@ dmypy.json
 .DS_Store
 
 # don't version the actual data
-datasets/data/
-models/data/
-tasks/data/
+src/datasets/data/
+src/models/data/
+src/tasks/data/
+outputs/
 
 # library directories
 lightning_logs/
 wandb/
+
+# other
+.vscode/
 

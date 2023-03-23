@@ -1,13 +1,12 @@
 
 import torch
 import torch.nn as nn
-import wandb
 import numpy as np
 import torchvision
-import pytorch_lightning as pl
+import lightning.pytorch as pl
 from torchmetrics.functional import accuracy, f1_score
 from sklearn.metrics import balanced_accuracy_score, matthews_corrcoef, cohen_kappa_score
-from utils.utils import flatten_tensor_dicts
+from src.utils.utils import flatten_tensor_dicts
 from collections import defaultdict
 from lightly.data import LightlyDataset, SimCLRCollateFunction, collate
 from lightly.models.modules.heads import SimCLRProjectionHead
@@ -15,9 +14,10 @@ from lightly.loss import NTXentLoss
 
 
 class ImageClassifierLightningModule(pl.LightningModule):
-    def __init__(self, model, num_classes, labels_text=None, **kwargs):
+    def __init__(self, model, num_classes, cfg, labels_text=None):
         super().__init__()
 
+        self.cfg = cfg
         self.model = model
         self.num_classes = num_classes
         self.loss = torch.nn.CrossEntropyLoss()
@@ -95,7 +95,7 @@ class ImageClassifierLightningModule(pl.LightningModule):
         return {'loss': loss, 'preds': preds, 'labels': labels}
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=wandb.config.learning_rate)
+        return torch.optim.Adam(self.parameters(), lr=self.cfg.training.learning_rate)
 
 
 class SimCLRModel(pl.LightningModule):
@@ -129,11 +129,18 @@ class SimCLRModel(pl.LightningModule):
         return z
 
     def training_step(self, batch, batch_idx):
+        return self._common_step(batch, mode='train')
+
+    def validation_step(self, batch, batch_idx):
+        self._common_step(batch, mode='val')
+
+    def _common_step(self, batch, mode='train'):
         (x0, x1), _, _ = batch
         z0 = self.forward(x0)
         z1 = self.forward(x1)
         loss = self.criterion(z0, z1)
-        self.log('train_loss_ssl', loss)
+
+        self.log(f'{mode}_loss_ssl', loss)
 
         return loss
 

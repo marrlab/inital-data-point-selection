@@ -4,3 +4,4 @@ defaults:
   - dataset: isic_smallest
   - training: test
   - wandb: test
+  - hydra: chdir
