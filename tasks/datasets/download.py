@@ -11,6 +11,7 @@ import gdown
 DATASETS_DIRECTORY = 'src/datasets/data'
 ZIP_FILE = 'temp.zip'
 DATASET_FILE_IDS = {
+    'isic_smallest': '13lllhxlnYgMgKzxZK-VeAnBYdyWyFMJy',
     'isic_small': '11UFaBtXM3I2JCsOhAhAx5eP5JNsiaDac',
     'isic': '1bZe-IU-KtHLqKVXwng6_5vXf3SCZV3F6',
     'retinopathy': '1-2z6P8vGVWiFucD4lSnlFGEuyb2hTpCM',
