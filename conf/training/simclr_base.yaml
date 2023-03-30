@@ -1,7 +1,7 @@
 
-batch_size: 8
-input_size: 64
-epochs: 2
+batch_size: 256
+input_size: 256
+epochs: 100
 seed: 1
 num_workers: 6
 weights_type: imagenet

@@ -136,10 +136,7 @@ src/models/data/
 src/tasks/data/
 outputs/
 
-# library directories
-lightning_logs/
-wandb/
-
 # other
 .vscode/
+nohup.out
 
