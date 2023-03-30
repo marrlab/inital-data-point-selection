@@ -1,19 +1,14 @@
 
-import os
-import sys
-import torch
-import platform
 import hydra
-import wandb
-import torchvision
-import numpy as np
 import lightning.pytorch as pl
+import torch
+from lightly.data import LightlyDataset, SimCLRCollateFunction
+from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
 from omegaconf import DictConfig
-from lightly.data import LightlyDataset, SimCLRCollateFunction, collate
-from src.models.lightning_modules import SimCLRModel
+
 from src.datasets.datasets import get_dataset_class_by_name
+from src.models.lightning_modules import SimCLRModel
 from src.utils.wandb import init_run
-from lightning.pytorch.callbacks import ModelCheckpoint, LearningRateMonitor
 
 
 # TODO: try with other self-supervised models
@@ -28,18 +23,6 @@ def main(cfg: DictConfig):
     train_dataset = dataset_class('train')
     val_dataset = dataset_class('test')
 
-    # we create a torchvision transformation for embedding the dataset after training
-    # val_transforms = torchvision.transforms.Compose([
-    #     torchvision.transforms.Resize(
-    #         (cfg.training.input_size, cfg.training.input_size)),
-    #     torchvision.transforms.ToTensor(),
-    #     torchvision.transforms.Normalize(
-    #         mean=collate.imagenet_normalize['mean'],
-    #         std=collate.imagenet_normalize['std'],
-    #     )
-    # ])
-
-    # transforming our datasets to lightly datasets
     train_dataset_lightly = LightlyDataset(
         input_dir=train_dataset.images_dir
     )
@@ -77,7 +60,7 @@ def main(cfg: DictConfig):
     # defining the model
     lightning_model = SimCLRModel(
         max_epochs=cfg.training.epochs,
-        imagenet_weights=cfg.training.imagenet_weights,
+        imagenet_weights=cfg.training.weights_type == 'imagenet',
     )
 
     # wandb connection (assumes wandb.init has been called before)
@@ -89,7 +72,8 @@ def main(cfg: DictConfig):
         accelerator='gpu' if torch.cuda.is_available() else 'cpu',
         devices=1,
         callbacks=[
-            ModelCheckpoint(save_weights_only=True, mode='min', monitor='val_loss_ssl', save_top_k=3, filename='{epoch}-{step}-{val_loss_ssl:.2f}'),
+            ModelCheckpoint(save_weights_only=True, mode='min', monitor='val_loss_ssl',
+                            save_top_k=3, filename='{epoch}-{step}-{val_loss_ssl:.2f}'),
             ModelCheckpoint(every_n_epochs=100),
             LearningRateMonitor('epoch'),
         ],

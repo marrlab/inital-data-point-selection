@@ -1,0 +1,8 @@
+
+defaults:
+  - _self_
+  - dataset: isic_smallest
+  - training: test
+  - image_classifier: test
+  - wandb: test
+  - hydra: chdir

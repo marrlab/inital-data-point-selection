@@ -4,4 +4,6 @@ input_size: 64
 epochs: 2
 seed: 1
 num_workers: 6
-imagenet_weights: True
+weights_type: imagenet
+weights_path: 
+

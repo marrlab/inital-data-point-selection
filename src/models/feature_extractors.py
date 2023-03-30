@@ -21,6 +21,7 @@ def get_feature_extractor_imagenet(architecture: str) -> tuple:
             'resnet50_swsl',
             'resnext50_32x4d_swsl',
             'resnext101_32x4d_swsl',
+    
             'resnext101_32x8d_swsl',
             'resnext101_32x16d_swsl',
         # SEMI-SUPERVISED MODELS PRETRAINED WITH YFCC100M #
@@ -97,82 +98,3 @@ def get_feature_extractor_imagenet(architecture: str) -> tuple:
     model.eval()
 
     return model, preprocess
-
-
-def get_feature_extractor_simclr_matek(weights_path: str) -> tuple:
-    if torch.cuda.is_available():
-        weights = torch.load(weights_path)
-    else:
-        weights = torch.load(weights_path, map_location=torch.device('cpu'))
-
-    model = SimCLRArch(3, 10, 0.15, False, arch='resnet', input_size=128)
-    model.load_state_dict(weights['state_dict'])
-
-    preprocess = transforms.Compose([
-        transforms.Resize(128),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.8206, 0.7280, 0.8362], std=[0.1630, 0.2506, 0.0919]),
-    ])
-
-    if torch.cuda.is_available():
-        model.to('cuda')
-
-    model.eval()
-
-    return model, preprocess
-
-
-def compute_features(model, dataset, path, batch_size=32):
-    model.eval()
-
-    data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size)
-    batches = int(np.ceil(len(dataset) / batch_size))
-
-    data = {
-        'features': [],
-        'labels': [],
-        'names': [],
-    }
-
-    print('started computing features')
-    with tqdm(total=batches) as pbar:
-        for i, batch in enumerate(data_loader):
-            with torch.no_grad():
-              output = model(batch['image'])
-
-            data['features'].extend(output.cpu().numpy())
-            data['labels'].extend(batch['label'].cpu().numpy())
-            data['names'].extend(batch['name'])
-
-            if i == 0:
-                print(f"feature vector length: {len(data['features'][0])}")
-
-            pbar.update()
-
-    print('creating csv file with features')
-    with open(path, 'w') as csv_file:
-        csv_writer = csv.writer(csv_file)
-        csv_writer.writerow(['name', 'label', 'feature'])
-        for i in range(len(data['features'])):
-            csv_writer.writerow([
-                data['names'][i],
-                data['labels'][i],
-                data['features'][i].tolist()
-            ])
-
-
-def load_features_numpy(path):
-    data = {
-        'features': [],
-        'labels': [],
-        'names': [], 
-    }
-
-    with open(path, 'r') as csv_file:
-        csv_reader = csv.DictReader(csv_file)
-        for row in csv_reader:
-            data['features'].append(np.array([float(el) for el in row['feature'][1:-1].split(', ')]))
-            data['labels'].append(row['label'])
-            data['names'].append(row['name'])
-
-    return data
