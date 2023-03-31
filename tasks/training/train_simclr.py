@@ -72,9 +72,9 @@ def main(cfg: DictConfig):
         accelerator='gpu' if torch.cuda.is_available() else 'cpu',
         devices=1,
         callbacks=[
-            ModelCheckpoint(save_weights_only=True, mode='min', monitor='val_loss_ssl',
+            ModelCheckpoint(mode='min', monitor='val_loss_ssl',
                             save_top_k=3, filename='{epoch}-{step}-{val_loss_ssl:.2f}'),
-            ModelCheckpoint(every_n_epochs=100),
+            ModelCheckpoint(every_n_epochs=50),
             LearningRateMonitor('epoch'),
         ],
         logger=wandb_logger,
@@ -87,7 +87,7 @@ def main(cfg: DictConfig):
     )
 
     # saving the final model
-    trainer.save_checkpoint(cfg.training.model_save_path, weights_only=True)
+    trainer.save_checkpoint(cfg.training.model_save_path)
 
 
 if __name__ == '__main__':
