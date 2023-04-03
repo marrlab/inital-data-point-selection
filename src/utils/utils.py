@@ -133,3 +133,10 @@ def latex_to_pdf(latex_path: str, pdf_path: str, packages: Iterable[str] = ['boo
 
     # cropping the pdf
     crop(['-p', '0', '-a', '-10', '-o', pdf_path, tmp.name])
+
+def have_models_same_weights(model1, model2):
+    for p1, p2 in zip(model1.parameters(), model2.parameters()):
+        if p1.data.ne(p2.data).sum() > 0:
+            return False
+
+    return True

@@ -1,4 +1,5 @@
 
+import hydra
 import copy
 import wandb
 from omegaconf import DictConfig
@@ -6,12 +7,12 @@ import lightning.pytorch as pl
 from src.datasets.datasets import get_dataset_class_by_name
 # TODO
 from src.models.classifiers import \
-    get_classifier_imagenet, get_classifier_imagenet_preprocess_only, get_classifier_simclr, get_classifier_simclr_preprocess_only
+    get_classifier_imagenet, get_classifier_imagenet_preprocess_only, get_classifier_from_simclr, get_classifier_simclr_preprocess_only
 from src.datasets.subsets import get_n_random
 from src.models.training import train_image_classifier
 from src.utils.wandb import init_run
 
-@hydra.main(version_base=None, config_path='../../conf', config_name='train_simclr')
+@hydra.main(version_base=None, config_path='../../conf', config_name='random_baseline')
 def main(cfg: DictConfig):
     init_run(cfg)
 
@@ -20,9 +21,10 @@ def main(cfg: DictConfig):
     preprocess = None
     if cfg.training.weights_type == 'imagenet':
         preprocess = get_classifier_imagenet_preprocess_only(
-            cfg.image_classifier.architecture)
+            cfg.training.architecture)
     elif cfg.training.weights_type == 'simclr':
-        preprocess = get_classifier_simclr_preprocess_only(cfg.training.input_size)
+        preprocess = get_classifier_simclr_preprocess_only(
+            cfg.training.input_size)
     else:
         raise ValueError(f'unknown weights type: {cfg.training.weights_type}')
 
@@ -30,7 +32,7 @@ def main(cfg: DictConfig):
     train_dataset = dataset_class('train', preprocess=preprocess)
     val_dataset = dataset_class('test', preprocess=preprocess)
 
-    train_subset = get_n_random(train_dataset, cfg.image_classifier.train_samples)
+    train_subset = get_n_random(train_dataset, cfg.training.train_samples)
     # TODO
     train_subset.relabel()
     wandb.config.labels = len(train_subset.labels)
@@ -43,10 +45,11 @@ def main(cfg: DictConfig):
 
     model = None
     if cfg.training.weights_type == 'imagenet':
-        model, _ = get_classifier_imagenet(wandb.config.architecture, num_classes)
+        # TODO: add weight freezing option
+        model, _ = get_classifier_imagenet(cfg.training.architecture, num_classes)
     elif cfg.training.weights_type == 'simclr':
         # TODO
-        pass
+        model = get_classifier_from_simclr(preprocess, cfg, num_classes)
     else:
         raise ValueError(f'unknown weights type: {cfg.training.weights_type}')
 

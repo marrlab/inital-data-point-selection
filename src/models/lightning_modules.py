@@ -26,6 +26,10 @@ class ImageClassifierLightningModule(pl.LightningModule):
             self.labels_text = list(
                 f'label {i}' for i in range(self.num_classes))
 
+        self.step_outputs = {
+            'train': [],
+            'val': []
+        }
         self.metrics_epoch_end = defaultdict(list)
 
         self.save_hyperparameters()
@@ -40,13 +44,14 @@ class ImageClassifierLightningModule(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         return self._common_step(batch, batch_idx, 'val')
 
-    def training_epoch_end(self, outputs):
-        self._common_epoch_end(outputs, 'train')
+    def on_training_epoch_end(self):
+        self._common_epoch_end('train')
 
-    def validation_epoch_end(self, outputs):
-        self._common_epoch_end(outputs, 'val')
+    def on_validation_epoch_end(self):
+        self._common_epoch_end('val')
 
-    def _common_epoch_end(self, outputs, step):
+    def _common_epoch_end(self, step):
+        outputs = self.step_outputs[step]
         outputs = flatten_tensor_dicts(outputs)
 
         self.metrics_epoch_end[f'{step}_loss_epoch_end'].append(
@@ -68,6 +73,8 @@ class ImageClassifierLightningModule(pl.LightningModule):
             self.log(key, self.metrics_epoch_end[key][-1])
             self.log(f'{key}_max', np.max(self.metrics_epoch_end[key]))
             self.log(f'{key}_min', np.min(self.metrics_epoch_end[key]))
+
+        self.step_outputs[step].clear()
 
     def _common_step(self, batch, batch_idx, step):
         assert step in ('train', 'val')
@@ -92,7 +99,10 @@ class ImageClassifierLightningModule(pl.LightningModule):
         self.log(f'{step}_f1_micro', f1_score(
             preds, labels, task='multiclass', num_classes=self.num_classes, average='micro'))
 
-        return {'loss': loss, 'preds': preds, 'labels': labels}
+        output = {'loss': loss, 'preds': preds, 'labels': labels}
+        self.step_outputs[step].append(output)
+
+        return output
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=self.cfg.training.learning_rate)
@@ -146,6 +156,7 @@ class SimCLRModel(pl.LightningModule):
 
     def configure_optimizers(self):
         optim = torch.optim.SGD(
+            # TODO: connect learning rate to the config (might break the checkpointing)
             self.parameters(), lr=6e-2, momentum=0.9, weight_decay=5e-4
         )
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(

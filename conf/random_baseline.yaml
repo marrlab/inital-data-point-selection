@@ -2,7 +2,8 @@
 defaults:
   - _self_
   - dataset: isic_smallest
-  - training: test
-  - image_classifier: test
-  - wandb: test
+  - training: simclr_pretraining
+  - wandb: random_baseline
   - hydra: chdir
+
+
