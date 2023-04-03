@@ -157,4 +157,7 @@ def map_tensor_values(tensor, mapping):
     """
 
     output_tensor = torch.tensor([mapping[i.item()] for i in tensor])
+    if torch.cuda.is_available():
+        output_tensor = output_tensor.to('cuda')
+
     return output_tensor
