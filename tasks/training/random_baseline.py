@@ -16,7 +16,8 @@ from src.utils.wandb import init_run
 def main(cfg: DictConfig):
     init_run(cfg)
 
-    pl.seed_everything(cfg.training.seed)
+    # we don't want this due to different sampling each time
+    # pl.seed_everything(cfg.training.seed)
 
     preprocess = None
     if cfg.training.weights.type == 'imagenet':
