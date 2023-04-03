@@ -41,6 +41,8 @@ def get_classifier_from_simclr(preprocess, cfg, num_classes: int):
         os.path.join(get_original_cwd(), cfg.training.weights.path)
     ).backbone
     model = ModuleWithFlatten(backbone)
+    if torch.cuda.is_available():
+        model.to('cuda')
 
     output_dim = get_output_dim(model, preprocess)
 
