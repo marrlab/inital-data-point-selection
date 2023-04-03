@@ -6,7 +6,7 @@ import torchvision
 import lightning.pytorch as pl
 from torchmetrics.functional import accuracy, f1_score
 from sklearn.metrics import balanced_accuracy_score, matthews_corrcoef, cohen_kappa_score
-from src.utils.utils import flatten_tensor_dicts
+from src.utils.utils import flatten_tensor_dicts, map_tensor_values
 from collections import defaultdict
 from lightly.data import LightlyDataset, SimCLRCollateFunction, collate
 from lightly.models.modules.heads import SimCLRProjectionHead
@@ -14,17 +14,16 @@ from lightly.loss import NTXentLoss
 
 
 class ImageClassifierLightningModule(pl.LightningModule):
-    def __init__(self, model, num_classes, cfg, labels_text=None):
+    def __init__(self, model, num_labels, num_classes, label_to_class_mapping, class_to_label_mapping, cfg):
         super().__init__()
 
         self.cfg = cfg
         self.model = model
+        self.num_labels = num_labels
         self.num_classes = num_classes
+        self.label_to_class_mapping = label_to_class_mapping
+        self.class_to_label_mapping = class_to_label_mapping
         self.loss = torch.nn.CrossEntropyLoss()
-        self.labels_text = labels_text
-        if self.labels_text is None:
-            self.labels_text = list(
-                f'label {i}' for i in range(self.num_classes))
 
         self.step_outputs = {
             'train': [],
@@ -54,20 +53,21 @@ class ImageClassifierLightningModule(pl.LightningModule):
         outputs = self.step_outputs[step]
         outputs = flatten_tensor_dicts(outputs)
 
-        self.metrics_epoch_end[f'{step}_loss_epoch_end'].append(
-            torch.mean(outputs['loss']).detach().item())
+        if step == 'train':
+            self.metrics_epoch_end[f'{step}_loss_epoch_end'].append(
+                torch.mean(outputs['loss']).detach().item())
         self.metrics_epoch_end[f'{step}_accuracy_epoch_end'].append(accuracy(
-            outputs['preds'], outputs['labels'], task='multiclass', num_classes=self.num_classes).detach().item())
+            outputs['pred_labels'], outputs['labels'], task='multiclass', num_classes=self.num_labels).detach().item())
         self.metrics_epoch_end[f'{step}_f1_macro_epoch_end'].append(f1_score(
-            outputs['preds'], outputs['labels'], task='multiclass', num_classes=self.num_classes, average='macro').detach().item())
+            outputs['pred_labels'], outputs['labels'], task='multiclass', num_classes=self.num_labels, average='macro').detach().item())
         self.metrics_epoch_end[f'{step}_f1_micro_epoch_end'].append(f1_score(
-            outputs['preds'], outputs['labels'], task='multiclass', num_classes=self.num_classes, average='micro').detach().item())
-        self.metrics_epoch_end[f'{step}_balanced_accuracy'].append(
-            balanced_accuracy_score(outputs['labels'].cpu().numpy(), outputs['preds'].cpu().numpy()))
-        self.metrics_epoch_end[f'{step}_matthews_corrcoef'].append(
-            matthews_corrcoef(outputs['labels'].cpu().numpy(), outputs['preds'].cpu().numpy()))
-        self.metrics_epoch_end[f'{step}_cohen_kappa_score'].append(
-            cohen_kappa_score(outputs['labels'].cpu().numpy(), outputs['preds'].cpu().numpy()))
+            outputs['pred_labels'], outputs['labels'], task='multiclass', num_classes=self.num_labels, average='micro').detach().item())
+        self.metrics_epoch_end[f'{step}_balanced_accuracy_epoch_end'].append(
+            balanced_accuracy_score(outputs['labels'].cpu().numpy(), outputs['pred_labels'].cpu().numpy()))
+        self.metrics_epoch_end[f'{step}_matthews_corrcoef_epoch_end'].append(
+            matthews_corrcoef(outputs['labels'].cpu().numpy(), outputs['pred_labels'].cpu().numpy()))
+        self.metrics_epoch_end[f'{step}_cohen_kappa_score_epoch_end'].append(
+            cohen_kappa_score(outputs['labels'].cpu().numpy(), outputs['pred_labels'].cpu().numpy()))
 
         for key in self.metrics_epoch_end:
             self.log(key, self.metrics_epoch_end[key][-1])
@@ -79,7 +79,7 @@ class ImageClassifierLightningModule(pl.LightningModule):
     def _common_step(self, batch, batch_idx, step):
         assert step in ('train', 'val')
 
-        images, labels = batch['image'], batch['label']
+        images, classes, labels = batch['image'], batch['class'], batch['label']
 
         assert images.ndim == 4
 
@@ -87,19 +87,29 @@ class ImageClassifierLightningModule(pl.LightningModule):
         assert h % 32 == 0 and w % 32 == 0
 
         logits = self(images)
-        preds = torch.argmax(logits, dim=1)
+        pred_classes = torch.argmax(logits, dim=1)
 
-        loss = self.loss(logits, labels)
+        loss = None
+        if step == 'train':
+            loss = self.loss(logits, classes)
 
-        self.log(f'{step}_loss', loss)
-        self.log(f'{step}_accuracy', accuracy(preds, labels,
-                 task='multiclass', num_classes=self.num_classes))
-        self.log(f'{step}_f1_macro', f1_score(
-            preds, labels, task='multiclass', num_classes=self.num_classes, average='macro'))
-        self.log(f'{step}_f1_micro', f1_score(
-            preds, labels, task='multiclass', num_classes=self.num_classes, average='micro'))
+        # self.log(f'{step}_loss', loss)
+        # self.log(f'{step}_accuracy', accuracy(preds, labels,
+        #          task='multiclass', num_classes=self.num_classes))
+        # self.log(f'{step}_f1_macro', f1_score(
+        #     preds, labels, task='multiclass', num_classes=self.num_classes, average='macro'))
+        # self.log(f'{step}_f1_micro', f1_score(
+        #     preds, labels, task='multiclass', num_classes=self.num_classes, average='micro'))
 
-        output = {'loss': loss, 'preds': preds, 'labels': labels}
+        output = {
+            'pred_classes': pred_classes,
+            'pred_labels': map_tensor_values(pred_classes, self.class_to_label_mapping),
+            'classes': classes,
+            'labels': labels
+        }
+        if loss is not None:
+            output['loss'] = loss
+            
         self.step_outputs[step].append(output)
 
         return output

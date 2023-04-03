@@ -25,6 +25,7 @@ def flatten_tensor_dicts(ds):
         else:
             raise ValueError('unsupported tensor shape')
 
+
     return flatten_d
 
 
@@ -140,3 +141,20 @@ def have_models_same_weights(model1, model2):
             return False
 
     return True
+
+
+def map_tensor_values(tensor, mapping):
+    """
+    Map the values of a PyTorch tensor based on a dictionary.
+
+    Args:
+        tensor (torch.Tensor): The input tensor.
+        mapping (dict): A dictionary that maps input values to output values.
+
+    Returns:
+        torch.Tensor: A new tensor with the same shape as the input tensor, where each
+        element has been mapped to its corresponding value in the mapping dictionary.
+    """
+
+    output_tensor = torch.tensor([mapping[i.item()] for i in tensor])
+    return output_tensor

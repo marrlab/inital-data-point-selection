@@ -33,15 +33,18 @@ def main(cfg: DictConfig):
     val_dataset = dataset_class('test', preprocess=preprocess)
 
     train_subset = get_n_random(train_dataset, cfg.training.train_samples)
-    # TODO
-    train_subset.relabel()
-    wandb.config.labels = len(train_subset.labels)
+    
+    train_subset.reassign_classes()
+    wandb.config.labels = train_subset.get_number_of_labels()
     wandb.config.labels_text = train_subset.labels_text
+    wandb.config.label_to_class_mapping = train_subset.label_to_class_mapping
+    wandb.config.class_to_label_mapping = train_subset.class_to_label_mapping
+    wandb.config.classes = train_subset.get_number_of_classes()
 
     val_subset = copy.deepcopy(val_dataset)
-    val_subset.match_labels_and_filter(train_subset)
+    val_subset.match_classes_and_filter(train_subset)
 
-    num_classes = len(train_subset.labels)
+    num_classes = train_subset.get_number_of_classes()
 
     model = None
     if cfg.training.weights.type == 'imagenet':

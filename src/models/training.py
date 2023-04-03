@@ -14,8 +14,8 @@ from omegaconf import DictConfig
 from hydra.utils import get_original_cwd
 
 def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, val_dataset: ImageDataset, cfg: DictConfig):
-    # TODO: revise
     assert len(train_dataset.labels) == len(val_dataset.labels)
+    assert len(train_dataset.classes) == len(val_dataset.classes)
 
     train_data_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=cfg.training.batch_size, shuffle=True)
@@ -38,7 +38,7 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
                 n = 16
                 images = list(batch['image'][:n])
                 captions = [f'Ground Truth: {y_i} - Prediction: {y_pred}'
-                            for y_i, y_pred in zip(batch['label'][:n], outputs['preds'][:n])]
+                            for y_i, y_pred in zip(batch['label'][:n], outputs['pred_labels'][:n])]
 
                 # Option 1: log images with `WandbLogger.log_image`
                 wandb_logger.log_image(
@@ -47,7 +47,13 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
                     caption=captions)
 
     lightning_model = ImageClassifierLightningModule(
-        model, len(train_dataset.labels), cfg, labels_text=train_dataset.labels_text)
+        model,
+        train_dataset.get_number_of_labels(),
+        train_dataset.get_number_of_classes(),
+        train_dataset.label_to_class_mapping.copy(),
+        train_dataset.class_to_label_mapping.copy(),
+        cfg
+    )
     wandb_logger.watch(lightning_model)
     trainer = pl.Trainer(
         max_epochs=cfg.training.epochs,
@@ -56,10 +62,10 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
         accelerator='gpu' if torch.cuda.is_available() else 'cpu',
         devices=1,
         callbacks=[
-            # TODO: commented for debugging
-            # LogPredictionSamplesCallback(),
-            ModelCheckpoint(mode='min', monitor='val_loss_epoch_end',
-                            save_top_k=3, filename='{epoch}-{step}-{val_loss_ssl:.2f}'),
+            # TODO: comment out for debugging
+            LogPredictionSamplesCallback(),
+            ModelCheckpoint(mode='max', monitor='val_f1_macro_epoch_end',
+                            save_top_k=2, filename='{epoch}-{step}-{val_loss_ssl:.2f}'),
             ModelCheckpoint(every_n_epochs=10),
             LearningRateMonitor('epoch'),
         ]

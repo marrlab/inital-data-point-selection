@@ -46,7 +46,10 @@ class ImageDataset(torch.utils.data.Dataset):
         self.images_dir = None
         self.labels_text = []
         self.labels = []
+        self.classes = []
         self.labels_text_mapping = {}
+        self.label_to_class_mapping = {}
+        self.class_to_label_mapping = {}
 
         self.images_data = {
             'names': [],
@@ -66,6 +69,7 @@ class ImageDataset(torch.utils.data.Dataset):
     def __getitem__(self, i):
         data_point = {
             'label': self.images_data['labels'][i],
+            'class': self.label_to_class_mapping[self.images_data['labels'][i]],
             'name': self.images_data['names'][i],
         }
 
@@ -88,36 +92,31 @@ class ImageDataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.images_data['names'])
 
-    # restructures labeling, removing those for which there are no data points
-    # e.g. possible lables [0, 1, 2, 3, 4], present labels [0, 3, 4], new labels [0, 1, 2]
-    def relabel(self):
-        labels_unique = set(self.images_data['labels'])
-        labels_to_delete = list(set(range(len(self.labels))) - labels_unique)
+    # restructures label to class assignment, removing those for which there are no data points
+    # e.g. possible lables [0, 1, 2, 3, 4], present labels [0, 3, 4], new classes [0, 1, 2]
+    def reassign_classes(self):
+        labels_remaining = sorted(list(set(self.images_data['labels'])))
+        labels_missing = list(set(self.labels) - set(labels_remaining))
 
-        self.labels_text = np.delete(self.labels_text, labels_to_delete)
-        self.labels = list(range(len(labels_unique)))
-        self.labels_text_mapping = {text: id for id, text in enumerate(self.labels_text)} 
+        self.classes = list(range(len(labels_remaining)))
 
-        for i in range(len(self)):
-            self.images_data['labels'][i] = self.labels_text_mapping[self.images_data['labels_text'][i]]
+        self.label_to_class_mapping = {
+            label: label_index
+            for label_index, label in enumerate(labels_remaining)
+        }
+        for label in labels_missing:
+            self.label_to_class_mapping[label] = None
 
-    # changes the labeling so that it corresponds to the source dataset
-    # removes data points with labels (text) that don't appear in the source dataset
-    def match_labels_and_filter(self, source_dataset):
-        self.labels_text = source_dataset.labels_text.copy()
-        self.labels = source_dataset.labels.copy()
-        self.labels_text_mapping = source_dataset.labels_text_mapping.copy()
+        self.class_to_label_mapping = {
+            _class: labels_remaining[_class]
+            for _class in self.classes
+        }
 
-        for i in reversed(range(len(self))):
-            if self.images_data['labels_text'][i] not in self.labels_text:
-                del self.images_data['names'][i]
-                del self.images_data['labels_text'][i]
-                del self.images_data['labels'][i]
-                del self.images_data['paths'][i]
-
-                continue
-
-            self.images_data['labels'][i] = self.labels_text_mapping[self.images_data['labels_text'][i]]
+    # changes the label to class assignment so that it corresponds to the source dataset
+    def match_classes_and_filter(self, source_dataset):
+        self.classes = source_dataset.classes.copy()
+        self.label_to_class_mapping = source_dataset.label_to_class_mapping.copy()
+        self.class_to_label_mapping = source_dataset.class_to_label_mapping.copy()
 
     def standard_scale_features(self):
         keys = list(self.features.keys())
@@ -137,6 +136,12 @@ class ImageDataset(torch.utils.data.Dataset):
         for i, key in enumerate(keys):
             self.features[key] = X_new[i]
 
+    def get_number_of_classes(self):
+        return len(self.classes)
+
+    def get_number_of_labels(self):
+        return len(self.labels)
+
 
 class ImageDatasetWithFolderStructure(ImageDataset):
     def __init__(
@@ -155,6 +160,14 @@ class ImageDatasetWithFolderStructure(ImageDataset):
         self.labels_text = sorted([f.name for f in os.scandir(self.images_dir) if f.is_dir()])
         self.labels = list(range(len(self.labels_text)))
         self.labels_text_mapping = {text: id for id, text in enumerate(self.labels_text)}
+        self.label_to_class_mapping = {
+            label: label
+            for label in self.labels
+        }
+        self.class_to_label_mapping = {
+            label: label
+            for label in self.labels
+        }
         
         for label_text in self.labels_text:
             label_dir = os.path.join(self.images_dir, label_text)
