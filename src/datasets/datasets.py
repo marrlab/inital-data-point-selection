@@ -105,7 +105,7 @@ class ImageDataset(torch.utils.data.Dataset):
             for label_index, label in enumerate(labels_remaining)
         }
         for label in labels_missing:
-            self.label_to_class_mapping[label] = None
+            self.label_to_class_mapping[label] = -1
 
         self.class_to_label_mapping = {
             _class: labels_remaining[_class]

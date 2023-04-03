@@ -57,6 +57,7 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
     wandb_logger.watch(lightning_model)
     trainer = pl.Trainer(
         max_epochs=cfg.training.epochs,
+        check_val_every_n_epoch=2,
         logger=wandb_logger,
         log_every_n_steps=5,
         accelerator='gpu' if torch.cuda.is_available() else 'cpu',
