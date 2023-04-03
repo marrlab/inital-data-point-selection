@@ -64,9 +64,9 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
         callbacks=[
             # TODO: comment out for debugging
             LogPredictionSamplesCallback(),
-            ModelCheckpoint(mode='max', monitor='val_f1_macro_epoch_end',
-                            save_top_k=2, filename='{epoch}-{step}-{val_loss_ssl:.2f}'),
-            ModelCheckpoint(every_n_epochs=10),
+            # ModelCheckpoint(mode='max', monitor='val_f1_macro_epoch_end',
+            #                 save_top_k=1, filename='{epoch}-{step}-{val_f1_macro_epoch_end:.2f}'),
+            # ModelCheckpoint(every_n_epochs=10),
             LearningRateMonitor('epoch'),
         ]
     )
