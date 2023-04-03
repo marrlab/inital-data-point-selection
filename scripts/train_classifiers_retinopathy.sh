@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DATASET=retinopathy
-EPOCHS=50
+EPOCHS=150
 LEARNING_RATE=0.001
 WEIGHTS_PATH="outputs/2023-04-02/11-07-01/lightning_logs/w3wwh5r0/checkpoints/epoch\=965-step\=10626-val_loss_ssl\=4.67.ckpt"
 FEATURES_PATH="outputs/2023-04-03/18-42-13/features.csv"

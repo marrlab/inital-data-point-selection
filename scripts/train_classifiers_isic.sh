@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DATASET=isic
-EPOCHS=70
+EPOCHS=150
 LEARNING_RATE=0.001
 WEIGHTS_PATH="outputs/2023-03-31/08-15-53/lightning_logs/z35miyut/checkpoints/epoch\=995-step\=157368-val_loss_ssl\=3.99.ckpt"
 FEATURES_PATH="outputs/2023-04-02/12-52-36/features.csv"
