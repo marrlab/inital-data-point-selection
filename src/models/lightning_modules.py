@@ -43,7 +43,7 @@ class ImageClassifierLightningModule(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         return self._common_step(batch, batch_idx, 'val')
 
-    def on_training_epoch_end(self):
+    def on_train_epoch_end(self):
         self._common_epoch_end('train')
 
     def on_validation_epoch_end(self):
@@ -56,6 +56,7 @@ class ImageClassifierLightningModule(pl.LightningModule):
         if step == 'train':
             self.metrics_epoch_end[f'{step}_loss_epoch_end'].append(
                 torch.mean(outputs['loss']).detach().item())
+
         self.metrics_epoch_end[f'{step}_accuracy_epoch_end'].append(accuracy(
             outputs['pred_labels'], outputs['labels'], task='multiclass', num_classes=self.num_labels).detach().item())
         self.metrics_epoch_end[f'{step}_f1_macro_epoch_end'].append(f1_score(
