@@ -39,6 +39,8 @@ class ImageDataset(torch.utils.data.Dataset):
         if self.preprocess is None:
             self.preprocess = transforms.ToTensor()
         self.features_path = features_path
+        if self.features_path is not None:
+            self.features_path = os.path.join(get_original_cwd(), self.features_path)
         self.load_images = load_images
 
         self.images_dir = None
@@ -55,8 +57,8 @@ class ImageDataset(torch.utils.data.Dataset):
         self.features = {}
 
         # mapping from image name to feature
-        if features_path is not None:
-            with open(features_path, 'r') as csv_file:
+        if self.features_path is not None:
+            with open(self.features_path, 'r') as csv_file:
                 csv_reader = csv.DictReader(csv_file)
                 for row in csv_reader:
                     self.features[row['name']] = np.array([float(el) for el in row['feature'][1:-1].split(', ')])

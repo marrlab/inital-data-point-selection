@@ -8,11 +8,11 @@ from src.datasets.datasets import get_dataset_class_by_name
 # TODO
 from src.models.classifiers import \
     get_classifier_imagenet, get_classifier_imagenet_preprocess_only, get_classifier_from_simclr, get_classifier_simclr_preprocess_only
-from src.datasets.subsets import get_n_random
+from src.datasets.subsets import get_n_kmeans
 from src.models.training import train_image_classifier
 from src.utils.wandb import init_run
 
-@hydra.main(version_base=None, config_path='../../conf', config_name='random_baseline')
+@hydra.main(version_base=None, config_path='../../conf', config_name='badge_sampling')
 def main(cfg: DictConfig):
     init_run(cfg)
 
@@ -29,10 +29,21 @@ def main(cfg: DictConfig):
         raise ValueError(f'unknown weights type: {cfg.training.weights.type}')
 
     dataset_class = get_dataset_class_by_name(cfg.dataset.name)
-    train_dataset = dataset_class('train', preprocess=preprocess)
+    train_dataset = dataset_class('train', preprocess=preprocess, features_path=cfg.features.path)
     val_dataset = dataset_class('test', preprocess=preprocess)
 
-    train_subset = get_n_random(train_dataset, cfg.training.train_samples)
+    # feature scaling
+    if cfg.features.scaling is None:
+        pass
+    elif cfg.features.scaling == 'standard':
+        train_dataset.standard_scale_features()
+    elif cfg.features.scaling == 'min_max':
+        train_dataset.min_max_scale_features()
+    else:
+        raise ValueError(f'unknown feature scaling: {cfg.feature_scaling}')
+
+    train_subset = get_n_kmeans(train_dataset, cfg.training.train_samples,
+                                mode=cfg.kmeans.mode, criterium=cfg.kmeans.criterium)
     # TODO
     train_subset.relabel()
     wandb.config.labels = len(train_subset.labels)

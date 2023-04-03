@@ -6,8 +6,9 @@ epochs: 100
 learning_rate: 6e-2
 seed: 1
 num_workers: 6
-weights_type: imagenet
-weights_path: null 
-freeze_weights: False
+weights:
+  type: simclr
+  path: null
+  freeze: False
 architecture: null
 model_save_path: final.ckpt

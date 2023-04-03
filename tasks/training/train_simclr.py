@@ -60,7 +60,7 @@ def main(cfg: DictConfig):
     # defining the model
     lightning_model = SimCLRModel(
         max_epochs=cfg.training.epochs,
-        imagenet_weights=cfg.training.weights_type == 'imagenet',
+        imagenet_weights=cfg.training.weights.type == 'imagenet',
     )
 
     # wandb connection (assumes wandb.init has been called before)

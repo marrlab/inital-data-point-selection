@@ -1,0 +1,16 @@
+
+defaults:
+  - _self_
+  - dataset: isic_smallest
+  - training: simclr_pretraining
+  - wandb: badge_sampling
+  - hydra: chdir
+
+features:
+  scaling: standard
+  path: null
+kmeans:
+  mode: kmeans++
+  criterium: closest 
+
+

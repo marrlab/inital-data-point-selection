@@ -38,7 +38,7 @@ def get_classifier_from_simclr(preprocess, cfg, num_classes: int):
             return self.backbone(x).flatten(start_dim=1)
 
     backbone = SimCLRModel().load_from_checkpoint(
-        os.path.join(get_original_cwd(), cfg.training.weights_path)
+        os.path.join(get_original_cwd(), cfg.training.weights.path)
     ).backbone
     model = ModuleWithFlatten(backbone)
 
@@ -50,7 +50,7 @@ def get_classifier_from_simclr(preprocess, cfg, num_classes: int):
             super(Classifier, self).__init__()
 
             self.model = model
-            if cfg.training.freeze_weights:
+            if cfg.training.weights.freeze:
                 for param in self.model.parameters():
                     param.requires_grad = False
             
