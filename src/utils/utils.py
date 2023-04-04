@@ -49,44 +49,12 @@ def load_dataframes(paths: Iterable[str], contains_index=True) -> Iterable[pd.Da
         ]
 
 
-def get_runs(project: str) -> pd.DataFrame:
-    wandb.login(key='a29d7c338a594e427f18a0f1502e5a8f36e9adfb')
-    api = wandb.Api()
-
-    runs = api.runs(f'mireczech/{project}')
-
-    summary_list, config_list, name_list = [], [], []
-    for run in runs:
-        # .summary contains the output keys/values for metrics like accuracy.
-        #  We call ._json_dict to omit large files
-        summary_list.append(run.summary._json_dict)
-
-        # .config contains the hyperparameters.
-        #  We remove special values that start with _.
-        config_list.append(
-            {k: v for k, v in run.config.items()
-             if not k.startswith('_')}
-        )
-
-        # .name is the human-readable name of the run.
-        name_list.append(run.name)
-
-    runs_df = pd.DataFrame({
-        "summary": summary_list,
-        "config": config_list,
-        "name": name_list
-    })
-
-    return runs_df
-
-
 def load_yaml_as_dict(yaml_path: str) -> dict:
     d = None
     with open(yaml_path, 'r') as f:
         d = yaml.load(f, Loader=yaml.FullLoader)
 
     return d
-
 
 def load_yaml_as_obj(yaml_path: str) -> object:
     d = load_yaml_as_dict(yaml_path)
@@ -161,3 +129,22 @@ def map_tensor_values(tensor, mapping):
         output_tensor = output_tensor.to('cuda')
 
     return output_tensor
+
+def recursive_dict_compare(dict1, dict2):
+    """
+    Recursively compare two dictionaries for equality
+    """
+    if len(dict1) != len(dict2):
+        return False
+
+    for key, value1 in dict1.items():
+        value2 = dict2.get(key)
+        if isinstance(value1, dict) and isinstance(value2, dict):
+            # recurse for nested dictionaries
+            if not recursive_dict_compare(value1, value2):
+                return False
+        else:
+            if value1 != value2:
+                return False
+
+    return True
