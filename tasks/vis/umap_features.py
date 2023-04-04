@@ -5,10 +5,12 @@ import os
 import csv
 import sys
 import numpy as np
+import glob
 import wandb
 import umap
 import umap.plot
 import torch
+import zipfile
 import matplotlib.pyplot as plt
 import logging
 import hydra
@@ -28,6 +30,8 @@ from src.utils.utils import load_yaml_as_obj, latex_to_pdf, recursive_dict_compa
 from src.datasets.datasets import get_dataset_class_by_name
 from src.utils.wandb import get_runs
 from copy import deepcopy
+import warnings
+warnings.filterwarnings("ignore")
 
 @hydra.main(version_base=None, config_path='../../conf', config_name='umap_features')
 def main(cfg: DictConfig):
@@ -64,6 +68,11 @@ def main(cfg: DictConfig):
     for n_neighbors in tqdm(cfg.n_neighbors_options, desc='n_neighbors'):
         for min_dist in tqdm(cfg.min_dist_options, desc='min_dist_options', leave=False):
             run_umap(n_neighbors, min_dist)
+
+    # creating a zip with all the images
+    with zipfile.ZipFile('images.zip', mode='w') as zipf:
+        for file in glob.glob('*.png'):
+            zipf.write(file, arcname=file.split('/')[-1])
 
 
 if __name__ == '__main__':
