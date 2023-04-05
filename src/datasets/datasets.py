@@ -240,6 +240,17 @@ class RetinopathyDataset(ImageDatasetWithFolderStructure):
 # TODO
 # class JurkatDataset(ImageDataset):
 
+class Cifar10Dataset(ImageDatasetWithFolderStructure):
+    def __init__(
+            self, 
+            split, 
+            dataset_root_dir='src/datasets/data/cifar10',
+            preprocess=None,
+            features_path=None,
+            load_images=True,
+    ):
+        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
+
 def get_dataset_class_by_name(dataset_name: str):
     if dataset_name == 'matek':
         return MatekDataset

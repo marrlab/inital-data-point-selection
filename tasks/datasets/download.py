@@ -1,8 +1,10 @@
 
 import os
 import click
+import subprocess
 import requests
 import zipfile
+import random
 import io
 from tqdm import tqdm
 import shutil
@@ -20,7 +22,7 @@ DATASET_FILE_IDS = {
 
 
 @click.command()
-@click.option('--datasets', '-d', multiple=True, type=click.Choice(list(DATASET_FILE_IDS.keys())),
+@click.option('--datasets', '-d', multiple=True, type=click.Choice(list(DATASET_FILE_IDS.keys()) + ['cifar10']),
               help='Name(s) of dataset(s) to download')
 @click.option('--redownload', '-r', is_flag=True, default=False,
               help='Re-download file(s) even if they already exist in the output directory')
@@ -31,17 +33,22 @@ def main(datasets, redownload):
     create_directory(DATASETS_DIRECTORY)
 
     for dataset in datasets:
-        file_id = DATASET_FILE_IDS[dataset]
         extract_dir = os.path.join(DATASETS_DIRECTORY, dataset)
-
         if not redownload and os.path.exists(extract_dir):
             click.echo(f"{dataset} already exists in. Skipping...")
             continue
 
-        if os.path.exists(extract_dir):
-            shutil.rmtree(extract_dir)
+        if dataset in DATASET_FILE_IDS:
+            file_id = DATASET_FILE_IDS[dataset]
 
-        download_and_unzip(file_id)
+            if os.path.exists(extract_dir):
+                shutil.rmtree(extract_dir)
+
+            download_and_unzip(file_id)
+
+        elif dataset == 'cifar10':
+            subprocess.run(['cifar2png', 'cifar10', extract_dir])
+            os.remove('cifar-10-python.tar.gz')
 
         click.echo(f"{dataset} has been downloaded to {extract_dir}.")
 
