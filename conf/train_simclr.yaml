@@ -2,6 +2,6 @@
 defaults:
   - _self_
   - dataset: isic_smallest
-  - training: test
-  - wandb: test
+  - training: simclr_base
+  - wandb: train_simclr
   - hydra: chdir

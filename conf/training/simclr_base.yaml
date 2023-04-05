@@ -7,8 +7,8 @@ learning_rate: 6e-2
 seed: 1
 num_workers: 6
 weights:
-  type: simclr
+  type: imagenet
   path: null
   freeze: False
-architecture: null
+architecture: resnet34
 model_save_path: final.ckpt

@@ -58,10 +58,7 @@ def main(cfg: DictConfig):
     )
 
     # defining the model
-    lightning_model = SimCLRModel(
-        max_epochs=cfg.training.epochs,
-        imagenet_weights=cfg.training.weights.type == 'imagenet',
-    )
+    lightning_model = SimCLRModel(cfg=cfg)
 
     # wandb connection (assumes wandb.init has been called before)
     wandb_logger = pl.loggers.WandbLogger()
@@ -69,6 +66,7 @@ def main(cfg: DictConfig):
 
     trainer = pl.Trainer(
         max_epochs=cfg.training.epochs,
+        check_val_every_n_epoch=10,
         accelerator='gpu' if torch.cuda.is_available() else 'cpu',
         devices=1,
         callbacks=[

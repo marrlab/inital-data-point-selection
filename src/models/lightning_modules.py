@@ -120,20 +120,28 @@ class ImageClassifierLightningModule(pl.LightningModule):
 
 
 class SimCLRModel(pl.LightningModule):
-    def __init__(self, max_epochs=1, imagenet_weights=True):
+    def __init__(self, cfg):
         super().__init__()
 
-        # assinging passed attributes to the object
-        self.max_epochs = max_epochs
+        self.cfg = cfg
+        
+        assert cfg.training.architecture in ('resnet18', 'resnet34')
+        assert cfg.training.weights.type in ('imagenet', None)
 
-        # TODO: make configurable
         # create a ResNet backbone and remove the classification head
         resnet = None
-        if imagenet_weights:
-            resnet = torchvision.models.resnet18(
-                weights=torchvision.models.ResNet18_Weights.IMAGENET1K_V1)
-        else:
-            resnet = torchvision.models.resnet18()
+        if cfg.training.architecture == 'resnet18':
+            if cfg.training.weights.type == 'imagenet':
+                resnet = torchvision.models.resnet18(
+                    weights=torchvision.models.ResNet18_Weights.IMAGENET1K_V1)
+            else:
+                resnet = torchvision.models.resnet18()
+        elif cfg.training.architecture == 'resnet34':
+            if cfg.training.weights.type == 'imagenet':
+                resnet = torchvision.models.resnet34(
+                    weights=torchvision.models.ResNet34_Weights.IMAGENET1K_V1)
+            else:
+                resnet = torchvision.models.resnet34()
 
         self.backbone = nn.Sequential(*list(resnet.children())[:-1])
 
@@ -168,10 +176,10 @@ class SimCLRModel(pl.LightningModule):
     def configure_optimizers(self):
         optim = torch.optim.SGD(
             # TODO: connect learning rate to the config (might break the checkpointing)
-            self.parameters(), lr=6e-2, momentum=0.9, weight_decay=5e-4
+            self.parameters(), lr=self.cfg.training.learning_rate, momentum=0.9, weight_decay=5e-4
         )
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            optim, self.max_epochs
+            optim, self.cfg.training.epochs
         )
 
         return [optim], [scheduler]
