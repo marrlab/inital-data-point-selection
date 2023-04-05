@@ -2,6 +2,7 @@
 import hydra
 import lightning.pytorch as pl
 import torch
+from torchsummary import summary
 from lightly.data import LightlyDataset, SimCLRCollateFunction
 from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
 from omegaconf import DictConfig
@@ -59,6 +60,9 @@ def main(cfg: DictConfig):
 
     # defining the model
     lightning_model = SimCLRModel(cfg=cfg)
+
+    # printing the summary of the model
+    summary(SimCLRModel(cfg).to('cpu'), input_size=(3, cfg.training.input_size, cfg.training.input_size), device='cpu')
 
     # wandb connection (assumes wandb.init has been called before)
     wandb_logger = pl.loggers.WandbLogger()
