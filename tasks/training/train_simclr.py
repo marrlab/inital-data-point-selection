@@ -70,7 +70,7 @@ def main(cfg: DictConfig):
 
     trainer = pl.Trainer(
         max_epochs=cfg.training.epochs,
-        check_val_every_n_epoch=10,
+        check_val_every_n_epoch=5,
         accelerator='gpu' if torch.cuda.is_available() else 'cpu',
         devices=1,
         callbacks=[
