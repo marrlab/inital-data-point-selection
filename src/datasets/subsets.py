@@ -62,7 +62,7 @@ def get_n_kmeans(dataset: ImageDataset, n: int, mode='kmeans++', criterium='clos
     centers, indices = None, None
     if mode == 'kmeans++':
         centers, indices = kmeans_plusplus(
-            features, n_clusters=n, random_state=0)
+            features, n_clusters=n)
     elif mode == 'kmeans':
         kmeans = KMeans(n_clusters=n).fit(features)
         centers = kmeans.cluster_centers_
