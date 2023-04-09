@@ -37,8 +37,9 @@ def get_classifier_from_simclr(preprocess, cfg, num_classes: int):
         def forward(self, x):
             return self.backbone(x).flatten(start_dim=1)
 
-    backbone = SimCLRModel().load_from_checkpoint(
-        os.path.join(get_original_cwd(), cfg.training.weights.path)
+    backbone = SimCLRModel.load_from_checkpoint(
+        os.path.join(get_original_cwd(), cfg.training.weights.path),
+        cfg=cfg
     ).backbone
     model = ModuleWithFlatten(backbone)
     if torch.cuda.is_available():

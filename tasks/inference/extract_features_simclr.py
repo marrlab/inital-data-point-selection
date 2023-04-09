@@ -42,7 +42,7 @@ def main(cfg: DictConfig):
     )
 
     # loading the model and setting it to inference mode
-    model = SimCLRModel.load_from_checkpoint(os.path.join(get_original_cwd(), cfg.model_save_path))
+    model = SimCLRModel.load_from_checkpoint(os.path.join(get_original_cwd(), cfg.model_save_path), cfg=cfg)
     model.eval()
 
     features = []

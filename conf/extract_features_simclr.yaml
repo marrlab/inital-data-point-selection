@@ -2,7 +2,7 @@
 defaults:
   - _self_
   - dataset: isic_smallest
-  - training: test
+  - training: simclr_base
   - hydra: chdir
 
 model_save_path: ''
