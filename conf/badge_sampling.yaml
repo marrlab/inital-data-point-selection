@@ -12,5 +12,7 @@ features:
 kmeans:
   mode: kmeans++
   criterium: closest 
+  # train_samples_based|labels_based
+  # num_clusters: train_samples_based
 
 

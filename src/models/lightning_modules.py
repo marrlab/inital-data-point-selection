@@ -126,7 +126,7 @@ class SimCLRModel(pl.LightningModule):
         self.cfg = cfg
         
         assert cfg.training.architecture in ('resnet18', 'resnet34')
-        assert cfg.training.weights.type in ('imagenet', None)
+        assert cfg.training.weights.type in ('imagenet', 'simclr', None)
 
         # create a ResNet backbone and remove the classification head
         resnet = None
