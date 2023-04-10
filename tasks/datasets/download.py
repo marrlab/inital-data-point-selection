@@ -18,6 +18,7 @@ DATASET_FILE_IDS = {
     'isic': '1bZe-IU-KtHLqKVXwng6_5vXf3SCZV3F6',
     'retinopathy': '1-2z6P8vGVWiFucD4lSnlFGEuyb2hTpCM',
     'matek': '1-9eEvnaWXedo2LSTCRS19V_jyZZiffEt',
+    'jurkat': '1NYNJ-pv7XUgpkbgQVom1bpfZ_uc7n5ml'
 }
 
 

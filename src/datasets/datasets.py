@@ -237,8 +237,16 @@ class RetinopathyDataset(ImageDatasetWithFolderStructure):
     ):
         ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
 
-# TODO
-# class JurkatDataset(ImageDataset):
+class JurkatDataset(ImageDatasetWithFolderStructure):
+    def __init__(
+            self, 
+            split, 
+            dataset_root_dir='src/datasets/data/jurkat',
+            preprocess=None,
+            features_path=None,
+            load_images=True,
+    ):
+        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
 
 class Cifar10Dataset(ImageDatasetWithFolderStructure):
     def __init__(
@@ -262,6 +270,8 @@ def get_dataset_class_by_name(dataset_name: str):
         return IsicSmallestDataset
     elif dataset_name == 'retinopathy':
         return RetinopathyDataset
+    elif dataset_name == 'jurkat':
+        return JurkatDataset
     elif dataset_name == 'cifar10':
         return Cifar10Dataset
     else:
