@@ -78,4 +78,4 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
         val_dataloaders=val_data_loader,
     )
 
-    trainer.save_checkpoint(cfg.training.model_save_path)
+    # trainer.save_checkpoint(cfg.training.model_save_path)
