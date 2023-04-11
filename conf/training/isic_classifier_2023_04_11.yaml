@@ -1,0 +1,14 @@
+
+batch_size: 32
+input_size: 128
+train_samples: 100
+epochs: 200
+learning_rate: 0.001
+seed: 1
+num_workers: 6
+weights:
+  type: simclr
+  path: outputs/2023-04-05/23-04-29/lightning_logs/rbn9afqg/checkpoints/epoch=999-step=39000-val_loss_ssl=5.33.ckpt
+  freeze: true
+architecture: resnet34
+model_save_path: final.ckpt

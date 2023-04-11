@@ -28,6 +28,8 @@ from copy import deepcopy
 def main(cfg: DictConfig):
     cfg_dict = OmegaConf.to_container(cfg, resolve=True)
 
+    print(f'saving everything to: {os.getcwd()}')
+
     # defined fields
     required_metrics = [
         'val_accuracy_epoch_end_max',

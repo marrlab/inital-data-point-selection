@@ -18,12 +18,13 @@ DATASET_FILE_IDS = {
     'isic': '1bZe-IU-KtHLqKVXwng6_5vXf3SCZV3F6',
     'retinopathy': '1-2z6P8vGVWiFucD4lSnlFGEuyb2hTpCM',
     'matek': '1-9eEvnaWXedo2LSTCRS19V_jyZZiffEt',
-    'jurkat': '1NYNJ-pv7XUgpkbgQVom1bpfZ_uc7n5ml'
+    'jurkat': '1NYNJ-pv7XUgpkbgQVom1bpfZ_uc7n5ml',
+    'cifar10': '1m2ardUoEybZ0d3hpcueEjFDwadTi4dG1'
 }
 
 
 @click.command()
-@click.option('--datasets', '-d', multiple=True, type=click.Choice(list(DATASET_FILE_IDS.keys()) + ['cifar10']),
+@click.option('--datasets', '-d', multiple=True, type=click.Choice(list(DATASET_FILE_IDS.keys())),
               help='Name(s) of dataset(s) to download')
 @click.option('--redownload', '-r', is_flag=True, default=False,
               help='Re-download file(s) even if they already exist in the output directory')
@@ -39,17 +40,12 @@ def main(datasets, redownload):
             click.echo(f"{dataset} already exists in. Skipping...")
             continue
 
-        if dataset in DATASET_FILE_IDS:
-            file_id = DATASET_FILE_IDS[dataset]
+        file_id = DATASET_FILE_IDS[dataset]
 
-            if os.path.exists(extract_dir):
-                shutil.rmtree(extract_dir)
+        if os.path.exists(extract_dir):
+            shutil.rmtree(extract_dir)
 
-            download_and_unzip(file_id)
-
-        elif dataset == 'cifar10':
-            subprocess.run(['cifar2png', 'cifar10', extract_dir])
-            os.remove('cifar-10-python.tar.gz')
+        download_and_unzip(file_id)
 
         click.echo(f"{dataset} has been downloaded to {extract_dir}.")
 
