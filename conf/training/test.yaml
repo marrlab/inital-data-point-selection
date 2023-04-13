@@ -3,6 +3,7 @@ batch_size: 32
 input_size: 32
 train_samples: 100
 epochs: 20
+oversample: False
 learning_rate: 0.001
 seed: 1
 num_workers: 6

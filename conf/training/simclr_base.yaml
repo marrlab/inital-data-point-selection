@@ -2,6 +2,7 @@
 batch_size: 256
 input_size: 256
 train_samples: null
+oversample: False
 epochs: 100
 learning_rate: 6e-2
 seed: 1

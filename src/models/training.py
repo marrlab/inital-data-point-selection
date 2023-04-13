@@ -4,6 +4,8 @@ import torch
 import torchvision
 import lightning.pytorch as pl
 import numpy as np
+from collections import defaultdict
+from torch.utils.data import DataLoader, WeightedRandomSampler
 from src.models.lightning_modules import ImageClassifierLightningModule, SimCLRModel
 from src.utils.utils import get_the_best_accelerator
 import wandb
@@ -13,15 +15,30 @@ from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
 from omegaconf import DictConfig
 from hydra.utils import get_original_cwd
 
+
 def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, val_dataset: ImageDataset, cfg: DictConfig):
     assert len(train_dataset.labels) == len(val_dataset.labels)
     assert len(train_dataset.classes) == len(val_dataset.classes)
 
-    train_data_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=cfg.training.batch_size, shuffle=True)
-    batches = int(np.ceil(len(train_dataset) / cfg.training.batch_size))
+    # setting up oversampling if chosen
+    train_data_loader = None
+    if cfg.training.oversample:
+        class_counts = defaultdict(int)
+        for i in range(len(train_dataset)):
+            class_counts[train_dataset[i]['class']] += 1
 
-    val_data_loader = torch.utils.data.DataLoader(
+        weights = [1 / class_counts[train_dataset[i]['class']]
+                   for i in range(len(train_dataset))]
+
+        sampler = WeightedRandomSampler(
+            weights=weights, num_samples=len(train_dataset), replacement=True)
+        train_data_loader = DataLoader(
+            train_dataset, batch_size=cfg.training.batch_size, sampler=sampler)
+    else:
+        train_data_loader = DataLoader(
+            train_dataset, batch_size=cfg.training.batch_size, shuffle=True)
+
+    val_data_loader = DataLoader(
         val_dataset, batch_size=cfg.training.batch_size, shuffle=True)
     wandb_logger = pl.loggers.WandbLogger()
 
