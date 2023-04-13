@@ -63,6 +63,26 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
                     images=images,
                     caption=captions)
 
+        def on_train_batch_end(
+                self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx=0):
+            """Called when the validation batch ends."""
+
+            # `outputs` comes from `LightningModule.validation_step`
+            # which corresponds to our model predictions in this case
+
+            # Let's log n sample image predictions from the first batch
+            if trainer.current_epoch % 10 == 0 and batch_idx == 0:
+                n = 16
+                images = list(batch['image'][:n])
+                captions = [f'Ground Truth: {y_i} - Prediction: {y_pred}'
+                            for y_i, y_pred in zip(batch['label'][:n], outputs['pred_labels'][:n])]
+
+                # Option 1: log images with `WandbLogger.log_image`
+                wandb_logger.log_image(
+                    key='training_sample_images',
+                    images=images,
+                    caption=captions)
+
     lightning_model = ImageClassifierLightningModule(
         model,
         train_dataset.get_number_of_labels(),
@@ -76,7 +96,7 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
         max_epochs=cfg.training.epochs,
         check_val_every_n_epoch=20,
         logger=wandb_logger,
-        log_every_n_steps=5,
+        log_every_n_steps=1,
         accelerator=get_the_best_accelerator(),
         devices=1,
         callbacks=[

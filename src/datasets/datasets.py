@@ -28,6 +28,7 @@ class ImageDataset(torch.utils.data.Dataset):
             self, 
             split, 
             dataset_root_dir=None,
+            transform=None,
             preprocess=None,
             features_path=None,
             load_images=True,
@@ -39,6 +40,9 @@ class ImageDataset(torch.utils.data.Dataset):
         self.preprocess = preprocess
         if self.preprocess is None:
             self.preprocess = transforms.ToTensor()
+        self.transform = transform
+        if self.transform is None:
+            self.transform = transforms.Compose([])
         self.features_path = features_path
         if self.features_path is not None:
             self.features_path = os.path.join(get_original_cwd(), self.features_path)
@@ -77,6 +81,9 @@ class ImageDataset(torch.utils.data.Dataset):
         if self.load_images:
             input_image = Image.open(self.images_data['paths'][i])
             input_image = input_image.convert('RGB')
+
+            # debug
+            input_image = self.transform(input_image)
             input_tensor = self.preprocess(input_image)
 
             # move the input and model to the best device for speed if available
@@ -150,11 +157,12 @@ class ImageDatasetWithFolderStructure(ImageDataset):
             self, 
             split, 
             dataset_root_dir,
+            transform=None,
             preprocess=None,
             features_path=None,
             load_images=True,
     ):
-        ImageDataset.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
+        ImageDataset.__init__(self, split, dataset_root_dir, transform, preprocess, features_path, load_images)
 
         assert split in ('train', 'test')
 
@@ -186,11 +194,12 @@ class MatekDataset(ImageDatasetWithFolderStructure):
             self, 
             split, 
             dataset_root_dir='src/datasets/data/matek',
+            transform=None,
             preprocess=None,
             features_path=None,
             load_images=True,
     ):
-        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
+        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, transform, preprocess, features_path, load_images)
 
 
 class IsicDataset(ImageDatasetWithFolderStructure):
@@ -198,77 +207,84 @@ class IsicDataset(ImageDatasetWithFolderStructure):
             self, 
             split, 
             dataset_root_dir='src/datasets/data/isic',
+            transform=None,
             preprocess=None,
             features_path=None,
             load_images=True,
     ):
-        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
+        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, transform, preprocess, features_path, load_images)
 
 class IsicSmallDataset(ImageDatasetWithFolderStructure):
     def __init__(
             self, 
             split, 
             dataset_root_dir='src/datasets/data/isic_small',
+            transform=None,
             preprocess=None,
             features_path=None,
             load_images=True,
     ):
-        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
+        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, transform, preprocess, features_path, load_images)
 
 class IsicSmallestDataset(ImageDatasetWithFolderStructure):
     def __init__(
             self, 
             split, 
             dataset_root_dir='src/datasets/data/isic_smallest',
+            transform=None,
             preprocess=None,
             features_path=None,
             load_images=True,
     ):
-        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
+        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, transform, preprocess, features_path, load_images)
 
 class IsicSmallestUnbalancedDataset(ImageDatasetWithFolderStructure):
     def __init__(
             self, 
             split, 
             dataset_root_dir='src/datasets/data/isic_smallest_unbalanced',
+            transform=None,
             preprocess=None,
             features_path=None,
             load_images=True,
     ):
-        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
+        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, transform, preprocess, features_path, load_images)
 
 class RetinopathyDataset(ImageDatasetWithFolderStructure):
     def __init__(
             self, 
             split, 
             dataset_root_dir='src/datasets/data/retinopathy',
+            transform=None,
             preprocess=None,
             features_path=None,
             load_images=True,
     ):
-        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
+        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, transform, preprocess, features_path, load_images)
 
 class JurkatDataset(ImageDatasetWithFolderStructure):
     def __init__(
             self, 
             split, 
             dataset_root_dir='src/datasets/data/jurkat',
+            transform=None,
             preprocess=None,
             features_path=None,
             load_images=True,
     ):
-        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
+        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, transform, preprocess, features_path, load_images)
 
 class Cifar10Dataset(ImageDatasetWithFolderStructure):
     def __init__(
             self, 
             split, 
             dataset_root_dir='src/datasets/data/cifar10',
+            transform=None,
             preprocess=None,
             features_path=None,
             load_images=True,
     ):
-        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
+        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, transform, preprocess, features_path, load_images)
 
 def get_dataset_class_by_name(dataset_name: str):
     if dataset_name == 'matek':

@@ -46,3 +46,6 @@ def get_runs(project: str) -> pd.DataFrame:
     })
 
     return runs_df
+
+def cast_dict_to_int(d):
+    return {int(k): int(v) for k, v in d.items()}

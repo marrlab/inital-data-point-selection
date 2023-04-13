@@ -34,8 +34,6 @@ def get_output_dim(model, preprocess):
 
     dummy_output = model(dummy_batch)
 
-    print(dummy_output.shape)
-
     assert len(dummy_output.shape) == 2 and dummy_output.shape[0] == 1
 
     return dummy_output.shape[1]
