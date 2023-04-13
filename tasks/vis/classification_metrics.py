@@ -32,11 +32,11 @@ def main(cfg: DictConfig):
 
     # defined fields
     required_metrics = [
-        'val_accuracy_epoch_end_max',
-        'val_f1_macro_epoch_end_max',
-        'val_balanced_accuracy_epoch_end_max',
-        'val_matthews_corrcoef_epoch_end_max',
-        'val_cohen_kappa_score_epoch_end_max'
+        'val_accuracy_epoch_end',
+        'val_f1_macro_epoch_end',
+        'val_balanced_accuracy_epoch_end',
+        'val_matthews_corrcoef_epoch_end',
+        'val_cohen_kappa_score_epoch_end'
     ]
     required_metrics_name = [
         'ACC',
