@@ -1,6 +1,7 @@
 
 import torch
 from PIL import Image
+from src.utils.utils import to_best_available_device
 
 class Identity(torch.nn.Module):
     def __init__(self):
@@ -24,8 +25,7 @@ def get_output_dim(model, preprocess):
     dummy_tensor = preprocess(dummy_image)
     dummy_batch = dummy_tensor[None, :, :, :] 
 
-    if torch.cuda.is_available():
-        dummy_batch = dummy_batch.to('cuda')
+    dummy_batch = to_best_available_device(dummy_batch)
 
     assert len(dummy_batch.shape) == 4 and \
         dummy_batch.shape[0] == 1 and \

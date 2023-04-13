@@ -8,6 +8,7 @@ from src.models.helpers import Identity
 from torchvision import transforms
 from ctypes import ArgumentError
 from src.models.med_al_ssl_surgery.simclr_arch import SimCLRArch
+from src.utils.utils import to_best_available_device
 
 # source: https://pytorch.org/hub/facebookresearch_semi-supervised-ImageNet1K-models_resnext/
 def get_feature_extractor_imagenet(architecture: str) -> tuple:
@@ -92,9 +93,7 @@ def get_feature_extractor_imagenet(architecture: str) -> tuple:
     if model is None or preprocess is None:
         raise ArgumentError('model or preprocessing pipeline could not be loaded')
 
-    if torch.cuda.is_available():
-        model.to('cuda')
-
+    model = to_best_available_device(model)
     model.eval()
 
     return model, preprocess

@@ -5,7 +5,7 @@ import torchvision
 import lightning.pytorch as pl
 import numpy as np
 from src.models.lightning_modules import ImageClassifierLightningModule, SimCLRModel
-from src.utils.utils import have_models_same_weights
+from src.utils.utils import get_the_best_accelerator
 import wandb
 from src.datasets.datasets import ImageDataset, get_dataset_class_by_name
 from lightly.data import LightlyDataset, SimCLRCollateFunction, collate
@@ -60,7 +60,7 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
         check_val_every_n_epoch=20,
         logger=wandb_logger,
         log_every_n_steps=5,
-        accelerator='gpu' if torch.cuda.is_available() else 'cpu',
+        accelerator=get_the_best_accelerator(),
         devices=1,
         callbacks=[
             # TODO: comment out for debugging

@@ -125,8 +125,7 @@ def map_tensor_values(tensor, mapping):
     """
 
     output_tensor = torch.tensor([mapping[i.item()] for i in tensor])
-    if torch.cuda.is_available():
-        output_tensor = output_tensor.to('cuda')
+    output_tensor = to_best_available_device(output_tensor)
 
     return output_tensor
 
@@ -148,3 +147,20 @@ def recursive_dict_compare(dict1, dict2):
                 return False
 
     return True
+
+# can be a model or a tensor
+def to_best_available_device(input):
+    if torch.cuda.is_available():
+        input = input.to('cuda')
+    elif torch.backends.mps.is_available():
+        input = input.to('mps')
+
+    return input
+
+def get_the_best_accelerator():
+    if torch.cuda.is_available():
+        return 'gpu'
+    elif torch.backends.mps.is_available():
+        return 'mps'
+
+    return 'cpu'

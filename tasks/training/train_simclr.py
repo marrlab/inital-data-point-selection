@@ -10,6 +10,7 @@ from omegaconf import DictConfig
 from src.datasets.datasets import get_dataset_class_by_name
 from src.models.lightning_modules import SimCLRModel
 from src.utils.wandb import init_run
+from src.utils.utils import get_the_best_accelerator
 
 
 # TODO: try with other self-supervised models
@@ -71,7 +72,7 @@ def main(cfg: DictConfig):
     trainer = pl.Trainer(
         max_epochs=cfg.training.epochs,
         check_val_every_n_epoch=5,
-        accelerator='gpu' if torch.cuda.is_available() else 'cpu',
+        accelerator=get_the_best_accelerator(),
         devices=1,
         callbacks=[
             ModelCheckpoint(mode='min', monitor='val_loss_ssl',

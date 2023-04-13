@@ -21,11 +21,9 @@ def main(cfg: DictConfig):
 
     preprocess = None
     if cfg.training.weights.type == 'imagenet':
-        preprocess = get_classifier_imagenet_preprocess_only(
-            cfg.training.architecture)
+        preprocess = get_classifier_imagenet_preprocess_only(cfg)
     elif cfg.training.weights.type == 'simclr':
-        preprocess = get_classifier_simclr_preprocess_only(
-            cfg.training.input_size)
+        preprocess = get_classifier_simclr_preprocess_only(cfg)
     else:
         raise ValueError(f'unknown weights type: {cfg.training.weights.type}')
 
@@ -50,7 +48,7 @@ def main(cfg: DictConfig):
     model = None
     if cfg.training.weights.type == 'imagenet':
         # TODO: add weight freezing option
-        model, _ = get_classifier_imagenet(cfg.training.architecture, num_classes)
+        model, _ = get_classifier_imagenet(cfg, num_classes)
     elif cfg.training.weights.type == 'simclr':
         # TODO
         model = get_classifier_from_simclr(preprocess, cfg, num_classes)

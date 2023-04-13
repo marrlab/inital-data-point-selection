@@ -8,6 +8,7 @@ from PIL import Image
 from torchvision import transforms
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from hydra.utils import get_original_cwd
+from src.utils.utils import to_best_available_device
 
 
 max_int = sys.maxsize
@@ -78,9 +79,8 @@ class ImageDataset(torch.utils.data.Dataset):
             input_image = input_image.convert('RGB')
             input_tensor = self.preprocess(input_image)
 
-            # move the input and model to GPU for speed if available
-            if torch.cuda.is_available():
-                input_tensor = input_tensor.to('cuda')
+            # move the input and model to the best device for speed if available
+            input_tensor = to_best_available_device(input_tensor)
 
             data_point['image'] = input_tensor
 

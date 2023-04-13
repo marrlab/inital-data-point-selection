@@ -71,9 +71,12 @@ class ImageClassifierLightningModule(pl.LightningModule):
             cohen_kappa_score(outputs['labels'].cpu().numpy(), outputs['pred_labels'].cpu().numpy()))
 
         for key in self.metrics_epoch_end:
-            self.log(key, self.metrics_epoch_end[key][-1])
-            self.log(f'{key}_max', np.max(self.metrics_epoch_end[key]))
-            self.log(f'{key}_min', np.min(self.metrics_epoch_end[key]))
+            # conversion needed due to float64 (double precision) not being supported in MPS
+            values = np.array(self.metrics_epoch_end[key]).astype(np.float32)
+
+            self.log(key, values[-1])
+            self.log(f'{key}_max', np.max(values))
+            self.log(f'{key}_min', np.min(values))
 
         self.step_outputs[step].clear()
 
