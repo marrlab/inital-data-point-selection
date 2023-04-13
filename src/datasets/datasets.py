@@ -226,6 +226,17 @@ class IsicSmallestDataset(ImageDatasetWithFolderStructure):
     ):
         ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
 
+class IsicSmallestUnbalancedDataset(ImageDatasetWithFolderStructure):
+    def __init__(
+            self, 
+            split, 
+            dataset_root_dir='src/datasets/data/isic_smallest_unbalanced',
+            preprocess=None,
+            features_path=None,
+            load_images=True,
+    ):
+        ImageDatasetWithFolderStructure.__init__(self, split, dataset_root_dir, preprocess, features_path, load_images)
+
 class RetinopathyDataset(ImageDatasetWithFolderStructure):
     def __init__(
             self, 
@@ -268,6 +279,8 @@ def get_dataset_class_by_name(dataset_name: str):
         return IsicSmallDataset
     elif dataset_name == 'isic_smallest':
         return IsicSmallestDataset
+    elif dataset_name == 'isic_smallest_unbalanced':
+        return IsicSmallestUnbalancedDataset
     elif dataset_name == 'retinopathy':
         return RetinopathyDataset
     elif dataset_name == 'jurkat':
