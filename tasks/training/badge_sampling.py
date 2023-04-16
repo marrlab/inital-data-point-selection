@@ -40,7 +40,7 @@ def main(cfg: DictConfig):
         transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.2, hue=0.05),
         transforms.RandomRotation(degrees=15),
     ])
-    train_dataset = dataset_class('train', transform=transform, preprocess=preprocess)
+    train_dataset = dataset_class('train', features_path=cfg.features.path, transform=transform, preprocess=preprocess)
     val_dataset = dataset_class('test', preprocess=preprocess)
 
     # feature scaling
@@ -51,7 +51,7 @@ def main(cfg: DictConfig):
     elif cfg.features.scaling == 'min_max':
         train_dataset.min_max_scale_features()
     else:
-        raise ValueError(f'unknown feature scaling: {cfg.feature_scaling}')
+        raise ValueError(f'unknown feature scaling: {cfg.feature.scaling}')
 
     train_subset = get_n_kmeans(train_dataset,
                                 n_samples=cfg.training.train_samples, n_clusters=cfg.kmeans.clusters,
