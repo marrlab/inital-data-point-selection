@@ -69,7 +69,7 @@ def get_n_kmeans(dataset: ImageDataset, n_samples: int, n_clusters: int, mode='k
         cluster_centers, _ = kmeans_plusplus(
             features, n_clusters=n_clusters)
     elif mode == 'kmeans':
-        kmeans = KMeans(n_clusters=n_clusters, init='k-means++', n_init='auto').fit(features)
+        kmeans = KMeans(n_clusters=n_clusters, init='k-means++').fit(features)
         cluster_centers = kmeans.cluster_centers_
     cluster_indices, _ = pairwise_distances_argmin_min(features, cluster_centers)
     

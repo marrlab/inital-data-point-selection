@@ -192,6 +192,5 @@ def pick_samples_from_classes_evenly(class_counts, n_total_samples):
 
     # converting dict to list
     class_samples = [class_samples[i] for i in range(n_classes)]
-    print(class_samples)
 
     return class_samples

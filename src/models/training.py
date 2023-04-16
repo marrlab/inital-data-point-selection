@@ -33,13 +33,13 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
         sampler = WeightedRandomSampler(
             weights=weights, num_samples=len(train_dataset), replacement=True)
         train_data_loader = DataLoader(
-            train_dataset, batch_size=cfg.training.batch_size, sampler=sampler)
+            train_dataset, batch_size=cfg.training.batch_size, sampler=sampler, num_workers=4)
     else:
         train_data_loader = DataLoader(
-            train_dataset, batch_size=cfg.training.batch_size, shuffle=True)
+            train_dataset, batch_size=cfg.training.batch_size, shuffle=True, num_workers=4)
 
     val_data_loader = DataLoader(
-        val_dataset, batch_size=cfg.training.batch_size, shuffle=True)
+        val_dataset, batch_size=cfg.training.batch_size, shuffle=True, num_workers=4)
     wandb_logger = pl.loggers.WandbLogger()
 
     class LogPredictionSamplesCallback(pl.Callback):
@@ -94,7 +94,7 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
     wandb_logger.watch(lightning_model)
     trainer = pl.Trainer(
         max_epochs=cfg.training.epochs,
-        check_val_every_n_epoch=20,
+        check_val_every_n_epoch=cfg.training.epochs,
         logger=wandb_logger,
         log_every_n_steps=1,
         accelerator=get_the_best_accelerator(),
