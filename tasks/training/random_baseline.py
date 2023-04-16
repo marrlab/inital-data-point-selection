@@ -69,5 +69,7 @@ def main(cfg: DictConfig):
 
     train_image_classifier(model, train_subset, val_subset, cfg)
 
+    wandb.finish()
+
 if __name__ == '__main__':
     main()

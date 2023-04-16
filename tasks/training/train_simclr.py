@@ -2,6 +2,7 @@
 import hydra
 import lightning.pytorch as pl
 import torch
+import wandb
 from torchsummary import summary
 from lightly.data import LightlyDataset, SimCLRCollateFunction
 from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
@@ -91,6 +92,8 @@ def main(cfg: DictConfig):
 
     # saving the final model
     trainer.save_checkpoint(cfg.training.model_save_path)
+
+    wandb.finish()
 
 
 if __name__ == '__main__':
