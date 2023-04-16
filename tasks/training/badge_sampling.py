@@ -2,7 +2,7 @@
 import hydra
 import copy
 import wandb
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 from collections import defaultdict
 from torchvision import transforms
 import lightning.pytorch as pl
@@ -16,6 +16,10 @@ from src.utils.wandb import init_run, cast_dict_to_int
 
 @hydra.main(version_base=None, config_path='../../conf', config_name='badge_sampling')
 def main(cfg: DictConfig):
+    # # debug
+    # print(OmegaConf.to_yaml(cfg, resolve=True))
+    # return
+
     init_run(cfg)
 
     # we don't want this due to different sampling each time
@@ -49,7 +53,8 @@ def main(cfg: DictConfig):
     else:
         raise ValueError(f'unknown feature scaling: {cfg.feature_scaling}')
 
-    train_subset = get_n_kmeans(train_dataset, cfg.training.train_samples,
+    train_subset = get_n_kmeans(train_dataset,
+                                n_samples=cfg.training.train_samples, n_clusters=cfg.kmeans.clusters,
                                 mode=cfg.kmeans.mode, criterium=cfg.kmeans.criterium)
 
     train_subset.reassign_classes()

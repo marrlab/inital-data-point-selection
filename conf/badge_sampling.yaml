@@ -5,14 +5,11 @@ defaults:
   - training: simclr_pretraining
   - wandb: badge_sampling
   - hydra: chdir
+  - features: test
 
-features:
-  scaling: standard
-  path: null
 kmeans:
-  mode: kmeans++
+  mode: kmeans
   criterium: closest 
-  # train_samples_based|labels_based
-  # num_clusters: train_samples_based
+  clusters: 100
 
 

@@ -71,7 +71,7 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
             # which corresponds to our model predictions in this case
 
             # Let's log n sample image predictions from the first batch
-            if trainer.current_epoch % 10 == 0 and batch_idx == 0:
+            if trainer.current_epoch % 20 == 0 and batch_idx == 0:
                 n = 16
                 images = list(batch['image'][:n])
                 captions = [f'Ground Truth: {y_i} - Prediction: {y_pred}'

@@ -2,15 +2,15 @@
 batch_size: 32
 input_size: 256
 train_samples: 100
-epochs: 200
-oversample: True
+epochs: 300
+oversample: true
 learning_rate: 0.001
 seed: 1
 num_workers: 6
 weights:
   type: simclr
   path: null
-  freeze: False
+  freeze: true
 architecture: resnet34
 model_save_path: final.ckpt
 

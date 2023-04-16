@@ -4,7 +4,9 @@ import hydra
 import torch
 import wandb
 import tempfile
+import random
 import pandas as pd
+from collections import defaultdict
 from lightning.pytorch.callbacks import ModelCheckpoint
 from typing import Iterable
 from src.utils.types import Result
@@ -164,3 +166,32 @@ def get_the_best_accelerator():
         return 'mps'
 
     return 'cpu'
+
+def pick_samples_from_classes_evenly(class_counts, n_total_samples):
+    # defining helper variables
+    n_classes = len(class_counts)
+    class_samples = defaultdict(int)
+    class_has_remaining = defaultdict(lambda: True)
+
+    # picking the rest of the samples to reach n_total_samples
+    done = False
+    while not done:
+        elegible_classes = [i for i in range(n_classes) if class_has_remaining[i]]
+        random.shuffle(elegible_classes)
+        for i in elegible_classes:
+            # pick sample from class
+            class_samples[i] += 1
+            
+            # check if they are no remaining samples for that class
+            if class_samples[i] == class_counts[i]:
+                class_has_remaining[i] = False
+
+            if sum(class_samples.values()) == n_total_samples:
+                done = True
+                break
+
+    # converting dict to list
+    class_samples = [class_samples[i] for i in range(n_classes)]
+    print(class_samples)
+
+    return class_samples

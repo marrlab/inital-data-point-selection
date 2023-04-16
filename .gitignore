@@ -135,6 +135,7 @@ src/datasets/data/
 src/models/data/
 src/tasks/data/
 outputs/
+multirun/
 
 # other
 .vscode/

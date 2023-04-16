@@ -3,10 +3,13 @@ import torch
 import copy
 import random
 import numpy as np
+from collections import Counter
+import matplotlib.pyplot as plt
 from src.datasets.datasets import ImageDataset
 from typing import List, Tuple, Union
 from sklearn.cluster import kmeans_plusplus, KMeans
 from sklearn.metrics import pairwise_distances_argmin_min
+from src.utils.utils import pick_samples_from_classes_evenly
 
 
 def get_by_indices(dataset: ImageDataset, indices: List[int]) -> ImageDataset:
@@ -47,44 +50,57 @@ def get_n_sorted_by_feature_func(dataset: ImageDataset, n: int, func, n_smallest
     return new_dataset
 
 
-def get_n_kmeans(dataset: ImageDataset, n: int, mode='kmeans++', criterium='closest', verbose=False) -> Union[ImageDataset, Tuple[ImageDataset, np.array, np.array, np.array]]:
+def get_n_kmeans(dataset: ImageDataset, n_samples: int, n_clusters: int, mode='kmeans++', criterium='closest') -> ImageDataset:
     assert dataset.features_path is not None
-    assert n <= len(dataset)
+    assert n_samples <= len(dataset)
+    assert n_clusters <= n_samples
     assert mode in ('kmeans++', 'kmeans')
-    assert criterium in ('closest', 'furthest')
+    assert criterium in ('closest', 'furthest', 'random')
 
+    # getting the features
     features = []
     for name in dataset.images_data['names']:
         features.append(dataset.features[name])
-
     features = np.array(features)
 
-    centers, indices = None, None
+    # getting the cluster centers and feature-to-cluster allegiance
+    cluster_centers, cluster_indices = None, None
     if mode == 'kmeans++':
-        centers, indices = kmeans_plusplus(
-            features, n_clusters=n)
+        cluster_centers, _ = kmeans_plusplus(
+            features, n_clusters=n_clusters)
     elif mode == 'kmeans':
-        kmeans = KMeans(n_clusters=n).fit(features)
-        centers = kmeans.cluster_centers_
-        indices, _ = pairwise_distances_argmin_min(centers, features)
+        kmeans = KMeans(n_clusters=n_clusters, init='k-means++', n_init='auto').fit(features)
+        cluster_centers = kmeans.cluster_centers_
+    cluster_indices, _ = pairwise_distances_argmin_min(features, cluster_centers)
+    
+    # getting sizes of clusters
+    cluster_size_counts = Counter(cluster_indices)
+    cluster_sizes = [cluster_size_counts[i] for i in range(n_clusters)]
 
-    if criterium == 'furthest':
-        # getting cluster index for each feature
-        cluster_indices, cluster_distances = pairwise_distances_argmin_min(
-            features, centers)
+    # getting the number of points to pick from each cluster
+    cluster_samples = pick_samples_from_classes_evenly(cluster_sizes, n_samples)
 
-        indices = []
-        # finding a point belonging to cluster i that has the biggest distance to its center
-        for i in range(n):
-            original_indices = np.where(cluster_indices == i)[0]
-            furthest_feature_index = original_indices[np.argmax(
-                cluster_distances[original_indices])]
+    indices = []
+    for i in range(n_clusters):
+        new_indices = None
+        distances = np.linalg.norm(features - cluster_centers[i], axis=1)
 
-            indices.append(furthest_feature_index)
+        if criterium == 'closest':
+            distances[cluster_indices != i] = np.inf
+            new_indices = np.argsort(distances)[:cluster_samples[i]]
+        elif criterium == 'furthest':
+            distances[cluster_indices != i] = -np.inf
+            new_indices = np.argsort(distances)[::-1][:cluster_samples[i]]
+        elif criterium == 'random':
+            new_indices = np.random.choice(
+                np.where(cluster_indices == i)[0],
+                size=cluster_samples[i],
+                replace=False)
+
+        indices.extend(new_indices)
 
     new_dataset = get_by_indices(dataset, indices)
 
-    if verbose:
-        return new_dataset, centers, indices, features[indices]
-    else:
-        return new_dataset
+    return new_dataset
+
+
