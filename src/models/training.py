@@ -33,13 +33,13 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
         sampler = WeightedRandomSampler(
             weights=weights, num_samples=len(train_dataset), replacement=True)
         train_data_loader = DataLoader(
-            train_dataset, batch_size=cfg.training.batch_size, sampler=sampler, num_workers=4)
+            train_dataset, batch_size=cfg.training.batch_size, sampler=sampler)
     else:
         train_data_loader = DataLoader(
-            train_dataset, batch_size=cfg.training.batch_size, shuffle=True, num_workers=4)
+            train_dataset, batch_size=cfg.training.batch_size, shuffle=True)
 
     val_data_loader = DataLoader(
-        val_dataset, batch_size=cfg.training.batch_size, shuffle=True, num_workers=4)
+        val_dataset, batch_size=cfg.training.batch_size, shuffle=True)
     wandb_logger = pl.loggers.WandbLogger()
 
     class LogPredictionSamplesCallback(pl.Callback):
