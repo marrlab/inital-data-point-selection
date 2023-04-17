@@ -1,0 +1,9 @@
+
+defaults:
+  - _self_
+  - dataset: isic_smallest
+  - training: test
+  - features: test
+  - hydra: chdir
+
+clusters_highlight: null
