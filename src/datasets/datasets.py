@@ -120,7 +120,7 @@ class ImageDataset(torch.utils.data.Dataset):
         }
 
     # changes the label to class assignment so that it corresponds to the source dataset
-    def match_classes_and_filter(self, source_dataset):
+    def match_classes(self, source_dataset):
         assert self.labels == source_dataset.labels
 
         self.classes = source_dataset.classes.copy()
@@ -164,7 +164,7 @@ class ImageDatasetWithFolderStructure(ImageDataset):
     ):
         ImageDataset.__init__(self, split, dataset_root_dir, transform, preprocess, features_path, load_images)
 
-        assert split in ('train', 'test')
+        assert split in ('train', 'val', 'test')
 
         self.images_dir = os.path.join(get_original_cwd(), dataset_root_dir, split)
         self.labels_text = sorted([f.name for f in os.scandir(self.images_dir) if f.is_dir()])

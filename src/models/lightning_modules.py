@@ -27,7 +27,8 @@ class ImageClassifierLightningModule(pl.LightningModule):
 
         self.step_outputs = {
             'train': [],
-            'val': []
+            'val': [],
+            'test': [],
         }
         self.metrics_epoch_end = defaultdict(list)
 
@@ -43,11 +44,17 @@ class ImageClassifierLightningModule(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         return self._common_step(batch, batch_idx, 'val')
 
+    def test_step(self, batch, batch_idx):
+        return self._common_step(batch, batch_idx, 'test')
+
     def on_train_epoch_end(self):
         self._common_epoch_end('train')
 
     def on_validation_epoch_end(self):
         self._common_epoch_end('val')
+
+    def on_test_epoch_end(self):
+        self._common_epoch_end('test')
 
     def _common_epoch_end(self, step):
         outputs = self.step_outputs[step]
@@ -81,8 +88,6 @@ class ImageClassifierLightningModule(pl.LightningModule):
         self.step_outputs[step].clear()
 
     def _common_step(self, batch, batch_idx, step):
-        assert step in ('train', 'val')
-
         images, classes, labels = batch['image'], batch['class'], batch['label']
 
         assert images.ndim == 4

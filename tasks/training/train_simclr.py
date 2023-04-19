@@ -24,7 +24,7 @@ def main(cfg: DictConfig):
     # creating datasets
     dataset_class = get_dataset_class_by_name(cfg.dataset.name)
     train_dataset = dataset_class('train')
-    val_dataset = dataset_class('test')
+    val_dataset = dataset_class('val')
 
     train_dataset_lightly = LightlyDataset(
         input_dir=train_dataset.images_dir

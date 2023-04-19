@@ -41,7 +41,8 @@ def main(cfg: DictConfig):
         transforms.RandomRotation(degrees=15),
     ])
     train_dataset = dataset_class('train', features_path=cfg.features.path, transform=transform, preprocess=preprocess)
-    val_dataset = dataset_class('test', preprocess=preprocess)
+    val_dataset = dataset_class('val', preprocess=preprocess)
+    test_dataset = dataset_class('test', preprocess=preprocess)
 
     # feature scaling
     if cfg.features.scaling is None:
@@ -68,8 +69,8 @@ def main(cfg: DictConfig):
     wandb.config.class_to_label_mapping = cast_dict_to_int(train_subset.class_to_label_mapping)
     wandb.config.classes = train_subset.get_number_of_classes()
 
-    val_subset = copy.deepcopy(val_dataset)
-    val_subset.match_classes_and_filter(train_subset)
+    val_dataset.match_classes(train_subset)
+    test_dataset.match_classes(train_subset)
 
     num_classes = train_subset.get_number_of_classes()
 
@@ -83,7 +84,7 @@ def main(cfg: DictConfig):
     else:
         raise ValueError(f'unknown weights type: {cfg.training.weights.type}')
 
-    train_image_classifier(model, train_subset, val_subset, cfg)
+    train_image_classifier(model, train_subset, val_dataset, test_dataset, cfg)
 
     wandb.finish()
 
