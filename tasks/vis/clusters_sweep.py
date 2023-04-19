@@ -78,7 +78,6 @@ def main(cfg: DictConfig):
         return df
 
     # random baseline
-
     def filter_run_random(row):
         try:
             return (
@@ -130,6 +129,7 @@ def main(cfg: DictConfig):
         ax.legend()
 
         fig.savefig(f'{metric_name}.pdf')
+        plt.close(fig)
 
 
 if __name__ == '__main__':
