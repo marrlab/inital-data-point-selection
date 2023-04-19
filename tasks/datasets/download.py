@@ -13,14 +13,14 @@ import gdown
 DATASETS_DIRECTORY = 'src/datasets/data'
 ZIP_FILE = 'temp.zip'
 DATASET_FILE_IDS = {
-    'isic': '1bZe-IU-KtHLqKVXwng6_5vXf3SCZV3F6',
-    'isic_small': '11UFaBtXM3I2JCsOhAhAx5eP5JNsiaDac',
-    'isic_smallest': '13lllhxlnYgMgKzxZK-VeAnBYdyWyFMJy',
-    'isic_smallest_unbalanced': '1aBTkvbiWzTVhzErqrPGWqqfUeK1U-PDI',
-    'retinopathy': '1-2z6P8vGVWiFucD4lSnlFGEuyb2hTpCM',
-    'matek': '1-9eEvnaWXedo2LSTCRS19V_jyZZiffEt',
-    'jurkat': '1NYNJ-pv7XUgpkbgQVom1bpfZ_uc7n5ml',
-    'cifar10': '1m2ardUoEybZ0d3hpcueEjFDwadTi4dG1'
+    'isic': '1-WH0Pwqj5mOss1WnAk84HwV7iMJiDwYA',
+    'isic_small': '1-edKs6IO5x2zsWSR9kaek1lWl3eqGns7',
+    'isic_smallest': '1-Zy8F7GsUNmF7VG8nNQ7yBaAnZ7TCZ2Q',
+    'isic_smallest_unbalanced': '1-UHuGRW0kTHlPfiFQ7kFdqV1FmyYZtdy',
+    'retinopathy': '1-ezwo8E0OqNxk7VE69VROHT4nKGBidJH',
+    'matek': '1-pIwf4OHz-g7_C0K9O0BHXGMc8_kze_z',
+    'jurkat': '1-qTLskAJ_nIwgX-OLgs6sBdJoDpx8S9N',
+    'cifar10': '1-rxN7fK9BL_0dOouqc_D50d6NmcvGil2'
 }
 
 
