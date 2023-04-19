@@ -38,6 +38,7 @@ class ImageClassifierLightningModule(pl.LightningModule):
         output = self.model(image)
         return output
 
+    # regular step (per batch)
     def training_step(self, batch, batch_idx):
         return self._common_step(batch, batch_idx, 'train')
 
@@ -47,6 +48,56 @@ class ImageClassifierLightningModule(pl.LightningModule):
     def test_step(self, batch, batch_idx):
         return self._common_step(batch, batch_idx, 'test')
 
+    def _common_step(self, batch, batch_idx, step):
+        images, classes, labels = batch['image'], batch['class'], batch['label']
+
+        assert images.ndim == 4
+
+        h, w = images.shape[2:]
+        assert h % 32 == 0 and w % 32 == 0
+
+        logits = self(images)
+        pred_classes = torch.argmax(logits, dim=1)
+
+        loss = None
+        if step == 'train':
+            loss = self.loss(logits, classes)
+
+        # self.log(f'{step}_loss', loss)
+        # self.log(f'{step}_accuracy', accuracy(preds, labels,
+        #          task='multiclass', num_classes=self.num_classes))
+        # self.log(f'{step}_f1_macro', f1_score(
+        #     preds, labels, task='multiclass', num_classes=self.num_classes, average='macro'))
+        # self.log(f'{step}_f1_micro', f1_score(
+        #     preds, labels, task='multiclass', num_classes=self.num_classes, average='micro'))
+
+        output = {
+            'pred_classes': pred_classes,
+            'pred_labels': map_tensor_values(pred_classes, self.class_to_label_mapping),
+            'classes': classes,
+            'labels': labels
+        }
+        if loss is not None:
+            output['loss'] = loss
+            
+        self.step_outputs[step].append(output)
+
+        return output
+
+    # epoch start
+    def on_train_epoch_start(self):
+        self._common_epoch_start('train')
+
+    def on_validation_epoch_start(self):
+        self._common_epoch_start('val')
+
+    def on_test_epoch_start(self):
+        self._common_epoch_start('test')
+
+    def _common_epoch_start(self, step): 
+        self.step_outputs[step].clear()
+
+    # epoch end
     def on_train_epoch_end(self):
         self._common_epoch_end('train')
 
@@ -84,44 +135,6 @@ class ImageClassifierLightningModule(pl.LightningModule):
             self.log(key, values[-1])
             self.log(f'{key}_max', np.max(values))
             self.log(f'{key}_min', np.min(values))
-
-        self.step_outputs[step].clear()
-
-    def _common_step(self, batch, batch_idx, step):
-        images, classes, labels = batch['image'], batch['class'], batch['label']
-
-        assert images.ndim == 4
-
-        h, w = images.shape[2:]
-        assert h % 32 == 0 and w % 32 == 0
-
-        logits = self(images)
-        pred_classes = torch.argmax(logits, dim=1)
-
-        loss = None
-        if step == 'train':
-            loss = self.loss(logits, classes)
-
-        # self.log(f'{step}_loss', loss)
-        # self.log(f'{step}_accuracy', accuracy(preds, labels,
-        #          task='multiclass', num_classes=self.num_classes))
-        # self.log(f'{step}_f1_macro', f1_score(
-        #     preds, labels, task='multiclass', num_classes=self.num_classes, average='macro'))
-        # self.log(f'{step}_f1_micro', f1_score(
-        #     preds, labels, task='multiclass', num_classes=self.num_classes, average='micro'))
-
-        output = {
-            'pred_classes': pred_classes,
-            'pred_labels': map_tensor_values(pred_classes, self.class_to_label_mapping),
-            'classes': classes,
-            'labels': labels
-        }
-        if loss is not None:
-            output['loss'] = loss
-            
-        self.step_outputs[step].append(output)
-
-        return output
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=self.cfg.training.learning_rate)

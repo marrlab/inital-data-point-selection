@@ -8,6 +8,7 @@ from collections import defaultdict
 from torch.utils.data import DataLoader, WeightedRandomSampler
 from src.models.lightning_modules import ImageClassifierLightningModule, SimCLRModel
 from src.utils.utils import get_the_best_accelerator
+from src.utils.utils import flatten_tensor_dicts, map_tensor_values
 import wandb
 from src.datasets.datasets import ImageDataset, get_dataset_class_by_name
 from lightly.data import LightlyDataset, SimCLRCollateFunction, collate
@@ -48,18 +49,18 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
         def on_train_batch_end(
                 self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx=0):
             if trainer.current_epoch % 20 == 0 and batch_idx == 0:
-                self._common_epoch_end('train', outputs, batch)
+                self._common_batch_end('train', outputs, batch)
 
         def on_validation_batch_end(
                 self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx=0):
             if batch_idx == 0:
-                self._common_epoch_end('val', outputs, batch)
+                self._common_batch_end('val', outputs, batch)
 
         def on_test_batch_end(
                 self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx=0):
-            self._common_epoch_end('test', outputs, batch)
+            self._common_batch_end('test', outputs, batch)
 
-        def _common_epoch_end(
+        def _common_batch_end(
                 self, step, outputs, batch):
             images = list(batch['image'])
             captions = [f'Ground Truth: {y_i} - Prediction: {y_pred}'
@@ -69,6 +70,32 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
                 key=f'{step}_sample_images',
                 images=images,
                 caption=captions)
+
+    class LogConfusionMatrixCallback(pl.Callback):
+        def on_train_epoch_end(
+                self, trainer, pl_module):
+            if trainer.current_epoch % 20 == 0:
+                self._common_epoch_end('train', pl_module)
+
+        def on_val_epoch_end(
+                self, trainer, pl_module):
+            self._common_epoch_end('val', pl_module)
+
+        def on_train_epoch_end(
+                self, trainer, pl_module):
+            self._common_epoch_end('test', pl_module)
+
+        def _common_epoch_end(
+                self, step, pl_module):
+            outputs = pl_module.step_outputs[step]
+            outputs = flatten_tensor_dicts(outputs)
+
+            # TODO: might need some debugging
+            wandb.log({'conf_mat': wandb.plot.confusion_matrix(
+                probs=None,
+                y_true=outputs['labels'].cpu().numpy(),
+                preds=outputs['pred_labels'].cpu().numpy(),
+                class_names=train_dataset.labels_text)})
 
     lightning_model = ImageClassifierLightningModule(
         model,
