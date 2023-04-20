@@ -154,16 +154,16 @@ def recursive_dict_compare(dict1, dict2):
 def to_best_available_device(input):
     if torch.cuda.is_available():
         input = input.to('cuda')
-    elif torch.backends.mps.is_available():
-        input = input.to('mps')
+    # elif torch.backends.mps.is_available():
+    #     input = input.to('mps')
 
     return input
 
 def get_the_best_accelerator():
     if torch.cuda.is_available():
         return 'gpu'
-    elif torch.backends.mps.is_available():
-        return 'mps'
+    # elif torch.backends.mps.is_available():
+    #     return 'mps'
 
     return 'cpu'
 

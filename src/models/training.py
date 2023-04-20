@@ -1,5 +1,6 @@
 
 import os
+import shutil
 import torch
 import torchvision
 import lightning.pytorch as pl
@@ -8,18 +9,18 @@ from collections import defaultdict
 from torch.utils.data import DataLoader, WeightedRandomSampler
 from src.models.lightning_modules import ImageClassifierLightningModule, SimCLRModel
 from src.utils.utils import get_the_best_accelerator
-from src.utils.utils import flatten_tensor_dicts, map_tensor_values
+from src.utils.utils import flatten_tensor_dicts
 import wandb
-from src.datasets.datasets import ImageDataset, get_dataset_class_by_name
-from lightly.data import LightlyDataset, SimCLRCollateFunction, collate
+from src.datasets.datasets import ImageDataset
 from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
 from omegaconf import DictConfig
-from hydra.utils import get_original_cwd
 
 
 def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, val_dataset: ImageDataset, test_dataset: ImageDataset, cfg: DictConfig):
-    assert len(train_dataset.labels) == len(val_dataset.labels) == len(test_dataset.labels)
-    assert len(train_dataset.classes) == len(val_dataset.classes) == len(test_dataset.classes)
+    assert len(train_dataset.labels) == len(
+        val_dataset.labels) == len(test_dataset.labels)
+    assert len(train_dataset.classes) == len(
+        val_dataset.classes) == len(test_dataset.classes)
 
     # setting up oversampling if chosen
     train_data_loader = None
@@ -43,8 +44,9 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
         val_dataset, batch_size=cfg.training.batch_size, shuffle=True)
     test_data_loader = DataLoader(
         test_dataset, batch_size=cfg.training.batch_size)
-        
+
     wandb_logger = pl.loggers.WandbLogger()
+
     class LogPredictionSamplesCallback(pl.Callback):
         def on_train_batch_end(
                 self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx=0):
@@ -74,14 +76,13 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
     class LogConfusionMatrixCallback(pl.Callback):
         def on_train_epoch_end(
                 self, trainer, pl_module):
-            if trainer.current_epoch % 20 == 0:
-                self._common_epoch_end('train', pl_module)
+            self._common_epoch_end('train', pl_module)
 
-        def on_val_epoch_end(
+        def on_validation_epoch_end(
                 self, trainer, pl_module):
             self._common_epoch_end('val', pl_module)
 
-        def on_train_epoch_end(
+        def on_test_epoch_end(
                 self, trainer, pl_module):
             self._common_epoch_end('test', pl_module)
 
@@ -90,12 +91,25 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
             outputs = pl_module.step_outputs[step]
             outputs = flatten_tensor_dicts(outputs)
 
-            # TODO: might need some debugging
-            wandb.log({'conf_mat': wandb.plot.confusion_matrix(
-                probs=None,
-                y_true=outputs['labels'].cpu().numpy(),
-                preds=outputs['pred_labels'].cpu().numpy(),
-                class_names=train_dataset.labels_text)})
+            wandb.log({
+                f'{step}_conf_mat': wandb.plot.confusion_matrix(
+                    probs=None,
+                    title=f'{step}_conf_mat',
+                    y_true=outputs['labels'].cpu().numpy(),
+                    preds=outputs['pred_labels'].cpu().numpy(),
+                    class_names=train_dataset.labels_text
+                ),
+            })
+
+            # TODO:
+            # wandb.log({
+            #     f'{step}_roc': wandb.plot.roc_curve(
+            #         ground_truth,
+            #         predictions,
+            #         labels=None,
+            #         classes_to_plot=None
+            #     ),
+            # })
 
     lightning_model = ImageClassifierLightningModule(
         model,
@@ -114,13 +128,9 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
         accelerator=get_the_best_accelerator(),
         devices=1,
         callbacks=[
-            # TODO: comment out for debugging
             LogPredictionSamplesCallback(),
-            # ModelCheckpoint(mode='max', monitor='val_f1_macro_epoch_end',
-            #                 save_top_k=1, filename='{epoch}-{step}-{val_f1_macro_epoch_end:.2f}'),
-            ModelCheckpoint(mode='max', monitor='val_f1_macro_epoch_end',
-                            save_top_k=1, filename='max_f1_macro_epoch_end'),
-            # ModelCheckpoint(every_n_epochs=10),
+            LogConfusionMatrixCallback(),
+            ModelCheckpoint(mode='max', monitor='val_f1_macro_epoch_end'),
             LearningRateMonitor('epoch'),
         ]
     )
@@ -133,9 +143,9 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
     )
 
     # testing
-    trainer.test(ckpt_path='max_f1_macro_epoch_end', dataloaders=test_data_loader)
+    trainer.test(ckpt_path='best', dataloaders=test_data_loader)
 
     # cleaning
-    
+    shutil.rmtree('lightning_logs')
 
     # trainer.save_checkpoint(cfg.training.model_save_path)

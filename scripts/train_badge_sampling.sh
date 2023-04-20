@@ -85,5 +85,5 @@ for i in $(seq 1 $runs); do
         features=$features \
         kmeans.clusters=$clusters \
         kmeans.mode=kmeans \
-        kmeans.criterium=random,closest,furthest
+        kmeans.criterium=random,closest,furthest,half_in_half
 done

@@ -38,6 +38,9 @@ def main(cfg: DictConfig):
     # TODO: maybe add more
     transform = transforms.Compose([
         transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.2, hue=0.05),
+        transforms.RandomAdjustSharpness(sharpness_factor=2, p=0.5),
+        transforms.RandomVerticalFlip(p=0.3),
+        transforms.RandomHorizontalFlip(p=0.3),
         transforms.RandomRotation(degrees=15),
     ])
     train_dataset = dataset_class('train', features_path=cfg.features.path, transform=transform, preprocess=preprocess)
@@ -79,7 +82,6 @@ def main(cfg: DictConfig):
         # TODO: add weight freezing option
         model, _ = get_classifier_imagenet(cfg, num_classes)
     elif cfg.training.weights.type == 'simclr':
-        # TODO
         model = get_classifier_from_simclr(preprocess, cfg, num_classes)
     else:
         raise ValueError(f'unknown weights type: {cfg.training.weights.type}')

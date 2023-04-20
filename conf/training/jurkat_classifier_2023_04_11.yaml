@@ -2,7 +2,7 @@
 batch_size: 32
 input_size: 64
 train_samples: 100
-epochs: 300
+epochs: 400
 oversample: true
 learning_rate: 0.01
 seed: 1

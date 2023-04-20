@@ -55,7 +55,7 @@ def get_n_kmeans(dataset: ImageDataset, n_samples: int, n_clusters: int, mode='k
     assert n_samples <= len(dataset)
     assert n_clusters <= n_samples
     assert mode in ('kmeans++', 'kmeans')
-    assert criterium in ('closest', 'furthest', 'random')
+    assert criterium in ('closest', 'furthest', 'random', 'half_in_half')
 
     # getting the features
     features = []
@@ -96,6 +96,18 @@ def get_n_kmeans(dataset: ImageDataset, n_samples: int, n_clusters: int, mode='k
                 np.where(cluster_indices == i)[0],
                 size=cluster_samples[i],
                 replace=False)
+        elif criterium == 'half_in_half':
+            new_indices = []
+            closest_cluster_samples = int(np.ceil(cluster_samples[i] / 2))
+            furthest_cluster_samples = cluster_samples[i] - closest_cluster_samples
+            print(cluster_samples[i], 'closest_cluster_samples', closest_cluster_samples, 'furthest_cluster_samples', furthest_cluster_samples)
+
+            # half from closest
+            distances[cluster_indices != i] = np.inf
+            new_indices.extend(np.argsort(distances)[:closest_cluster_samples])
+
+            distances[cluster_indices != i] = -np.inf
+            new_indices.extend(np.argsort(distances)[::-1][:furthest_cluster_samples])
 
         indices.extend(new_indices)
 
