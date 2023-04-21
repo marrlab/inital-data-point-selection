@@ -122,7 +122,7 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
     wandb_logger.watch(lightning_model)
     trainer = pl.Trainer(
         max_epochs=cfg.training.epochs,
-        check_val_every_n_epoch=20,
+        # check_val_every_n_epoch=20,
         logger=wandb_logger,
         log_every_n_steps=1,
         accelerator=get_the_best_accelerator(),
@@ -130,7 +130,7 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
         callbacks=[
             LogPredictionSamplesCallback(),
             LogConfusionMatrixCallback(),
-            ModelCheckpoint(mode='max', monitor='val_f1_macro_epoch_end'),
+            ModelCheckpoint(mode='max', monitor='train_f1_macro_epoch_end'),
             LearningRateMonitor('epoch'),
         ]
     )
@@ -139,7 +139,7 @@ def train_image_classifier(model: torch.nn.Module, train_dataset: ImageDataset, 
     trainer.fit(
         lightning_model,
         train_dataloaders=train_data_loader,
-        val_dataloaders=val_data_loader,
+        # val_dataloaders=val_data_loader,
     )
 
     # testing
