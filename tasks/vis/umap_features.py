@@ -1,44 +1,35 @@
 
-
-import re
 import os
-import csv
-import sys
 import numpy as np
 import glob
-import wandb
 import umap
 import umap.plot
-import torch
 import zipfile
 import matplotlib.pyplot as plt
-import logging
 import hydra
-import torchvision
-import pandas as pd
 from tqdm import tqdm
-from omegaconf import DictConfig, OmegaConf
-from hydra.utils import get_original_cwd
-from src.models.lightning_modules import SimCLRModel
+from omegaconf import DictConfig
 from src.datasets.datasets import get_dataset_class_by_name
-from lightly.data import LightlyDataset, SimCLRCollateFunction, collate
-from src.utils.utils import load_dataframes
-from scipy.stats import entropy
-from src.utils.types import Result
-from src.utils.utils import load_yaml_as_obj
-from src.utils.utils import load_yaml_as_obj, latex_to_pdf, recursive_dict_compare
 from src.datasets.datasets import get_dataset_class_by_name
-from src.utils.wandb import get_runs
-from copy import deepcopy
+from src.models.build_data_path import get_vis_folder_path, get_features_path, get_scan_features_path
 import warnings
 warnings.filterwarnings("ignore")
 
 @hydra.main(version_base=None, config_path='../../conf', config_name='umap_features')
 def main(cfg: DictConfig):
+    folder_path = get_vis_folder_path(cfg)
+    print(f'saving everything to: {folder_path}')
+
     # loading dataset
+    features_path = None
+    if cfg.use_scan_weights:
+        features_path = get_scan_features_path(cfg)
+    else:
+        features_path = get_features_path(cfg)
+
     dataset_class = get_dataset_class_by_name(cfg.dataset.name)
     dataset = dataset_class('train', load_images=False,
-                            features_path=cfg.features.path)
+                            features_path=features_path)
 
     if cfg.features.scaling == 'standard':
         dataset.standard_scale_features()
@@ -62,7 +53,7 @@ def main(cfg: DictConfig):
         plt.savefig(f'{image_name_prefix}_grey.png', bbox_inches='tight')
 
         umap.plot.points(mapper, labels=zs, background='white')
-        plt.savefig(f'{image_name_prefix}_labels.png', bbox_inches='tight')
+        plt.savefig(os.path.join(folder_path, f'{image_name_prefix}_labels.png'), bbox_inches='tight')
 
     # creating umap images
     for n_neighbors in tqdm(cfg.n_neighbors_options, desc='n_neighbors'):

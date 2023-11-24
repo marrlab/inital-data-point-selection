@@ -1,0 +1,7 @@
+
+defaults:
+  - _self_
+  - hydra: chdir
+
+train_samples: 100
+checkpoint_dir: null

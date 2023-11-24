@@ -1,0 +1,11 @@
+
+seed: 1
+batch_size: 512
+epochs: 100
+learning_rate: 1e-4
+weights:
+  type: simclr
+  version: null
+  freeze: false
+architecture: resnet34
+model_save_path: final.ckpt

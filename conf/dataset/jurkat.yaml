@@ -1,2 +1,4 @@
 
 name: jurkat
+input_size: 64
+num_classes: 7

@@ -1,0 +1,4 @@
+
+mode: kmeans
+criterium: fps 
+clusters: 1

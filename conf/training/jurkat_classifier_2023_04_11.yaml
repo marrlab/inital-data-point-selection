@@ -1,12 +1,11 @@
 
-batch_size: 32
+batch_size: 512
 input_size: 64
 train_samples: 100
-epochs: 400
+epochs: 75
 oversample: true
-learning_rate: 0.01
+learning_rate: 0.1
 seed: 1
-num_workers: 6
 weights:
   type: simclr
   path: outputs/2023-04-10/14-51-10/lightning_logs/vw8jsukl/checkpoints/epoch=999-step=12000-val_loss_ssl=6.57.ckpt

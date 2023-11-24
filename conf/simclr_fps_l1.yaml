@@ -1,0 +1,9 @@
+
+defaults:
+  - _self_
+  - dataset: isic_smallest
+  - training: classifier_base
+  - wandb: simclr_fps_l1
+  - hydra: chdir
+
+use_scan_weights: false

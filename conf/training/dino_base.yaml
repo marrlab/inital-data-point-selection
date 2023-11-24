@@ -1,0 +1,7 @@
+
+batch_size: 512
+epochs: 400
+learning_rate: 1e-5
+seed: 1
+architecture: resnet34
+model_save_path: final.ckpt

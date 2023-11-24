@@ -1,0 +1,13 @@
+
+seed: null
+batch_size: 512
+train_samples: 100
+epochs: 100
+oversample: true
+learning_rate: 0.1
+weights:
+  type: null
+  version: null
+  freeze: true
+architecture: resnet34
+model_save_path: null

@@ -6,7 +6,7 @@ oversample: False
 epochs: 100
 learning_rate: 6e-2
 seed: 1
-num_workers: 6
+
 weights:
   type: imagenet
   path: null

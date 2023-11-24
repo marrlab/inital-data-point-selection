@@ -1,0 +1,7 @@
+
+defaults:
+  - _self_
+  - dataset: isic_smallest
+  - training: swav_base
+  - wandb: train_swav
+  - hydra: chdir

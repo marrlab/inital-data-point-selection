@@ -1,0 +1,4 @@
+
+num_clusters: 20
+dropout: 0.5
+entropy_weight: 5.0

@@ -1,0 +1,15 @@
+
+defaults:
+  - _self_
+  - dataset: isic_smallest
+  - training: classifier_base
+  - scan: base
+  - wandb: linear_classifier_ceiling
+  - hydra: chdir
+
+use_scan_weights: false
+learning_rates:
+  - 1.0
+  - 0.1
+  - 0.01
+  - 0.001

@@ -38,7 +38,7 @@ def get_feature_extractor_imagenet(architecture: str) -> tuple:
         model.fc = Identity()
 
         preprocess = transforms.Compose([
-            transforms.Resize(256),
+            transforms.Resize(256, antialias=True),
             transforms.CenterCrop(224),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
@@ -62,7 +62,7 @@ def get_feature_extractor_imagenet(architecture: str) -> tuple:
         model.classifier[6] = Identity()
 
         preprocess = transforms.Compose([
-            transforms.Resize(256),
+            transforms.Resize(256, antialias=True),
             transforms.CenterCrop(224),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),

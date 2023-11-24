@@ -1,2 +1,4 @@
 
 name: matek 
+input_size: 128
+num_classes: 15

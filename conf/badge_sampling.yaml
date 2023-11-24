@@ -2,8 +2,11 @@
 defaults:
   - _self_
   - dataset: isic_smallest
-  - training: simclr_pretraining
+  - training: classifier_base
+  - scan: base
   - wandb: badge_sampling
   - hydra: chdir
-  - features: test
-  - kmeans: test
+  - features: base
+  - kmeans: base
+
+use_scan_weights: false

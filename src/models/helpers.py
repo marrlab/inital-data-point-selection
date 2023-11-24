@@ -1,5 +1,6 @@
 
 import torch
+import torchvision
 from PIL import Image
 from src.utils.utils import to_best_available_device
 
@@ -9,6 +10,30 @@ class Identity(torch.nn.Module):
         
     def forward(self, x):
         return x
+
+class ModuleWithFlatten(torch.nn.Module):
+    def __init__(self, backbone):
+        super(ModuleWithFlatten, self).__init__()
+
+        self.backbone = backbone
+
+    def forward(self, x):
+        return self.backbone(x).flatten(start_dim=1)
+
+def get_backbone(architecture, flatten):
+    assert architecture in ('resnet18', 'resnet34')
+
+    resnet = None
+    if architecture == 'resnet18':
+        resnet = torchvision.models.resnet18()
+    elif architecture == 'resnet34':
+        resnet = torchvision.models.resnet34()
+
+    backbone = torch.nn.Sequential(*list(resnet.children())[:-1])
+    if flatten:
+        backbone = ModuleWithFlatten(backbone)
+
+    return backbone, resnet.fc.in_features
 
 def create_remap_values(remapping):
     def fun(x):

@@ -12,7 +12,7 @@ import torchvision
 import pandas as pd
 from omegaconf import DictConfig, OmegaConf
 from hydra.utils import get_original_cwd
-from src.models.lightning_modules import SimCLRModel
+from src.models.simclr import SimCLR
 from src.datasets.datasets import get_dataset_class_by_name
 from lightly.data import LightlyDataset, SimCLRCollateFunction, collate
 from src.utils.utils import load_dataframes

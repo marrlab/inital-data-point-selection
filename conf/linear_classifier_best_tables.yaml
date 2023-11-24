@@ -1,0 +1,10 @@
+
+defaults:
+  - _self_
+  - hydra: chdir
+
+train_samples: 100
+model_type: simclr
+model_version: v1
+checkpoint_dir: null
+underline_worst: false

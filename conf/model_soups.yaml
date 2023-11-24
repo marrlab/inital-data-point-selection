@@ -1,0 +1,9 @@
+
+defaults:
+  - _self_
+  - dataset: isic_smallest
+  - training: classifier_base
+  - kmeans: base
+  - hydra: chdir
+
+model_paths: null

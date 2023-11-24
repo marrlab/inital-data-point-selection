@@ -1,0 +1,7 @@
+
+defaults:
+  - _self_
+  - dataset: isic_smallest
+  - training: dino_base
+  - wandb: train_dino
+  - hydra: chdir

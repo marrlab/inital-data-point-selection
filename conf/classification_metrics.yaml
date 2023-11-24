@@ -3,5 +3,5 @@ defaults:
   - _self_
   - dataset: isic_smallest
   - training: test
-  - features: test
+  - features: base
   - hydra: chdir

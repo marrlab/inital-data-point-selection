@@ -5,6 +5,8 @@ import torch
 import wandb
 import tempfile
 import random
+import numpy as np
+import multiprocessing
 import pandas as pd
 from collections import defaultdict
 from lightning.pytorch.callbacks import ModelCheckpoint
@@ -24,9 +26,10 @@ def flatten_tensor_dicts(ds):
             flatten_d[key] = torch.stack(tuple(d[key] for d in ds))
         elif len(ds[0][key].shape) == 1:
             flatten_d[key] = torch.cat(tuple(d[key] for d in ds))
+        elif len(ds[0][key].shape) == 2:
+            flatten_d[key] = torch.vstack(tuple(d[key] for d in ds))
         else:
             raise ValueError('unsupported tensor shape')
-
 
     return flatten_d
 
@@ -131,6 +134,13 @@ def map_tensor_values(tensor, mapping):
 
     return output_tensor
 
+def map_tensor_probs(probs, mapping, new_classes):
+    remapped_probs = torch.zeros((probs.shape[0], new_classes), device=probs.device)
+    for original_class, new_class in mapping.items():
+        remapped_probs[:, new_class] += probs[:, original_class]
+    
+    return remapped_probs
+
 def recursive_dict_compare(dict1, dict2):
     """
     Recursively compare two dictionaries for equality
@@ -167,6 +177,9 @@ def get_the_best_accelerator():
 
     return 'cpu'
 
+def get_cpu_count():
+    return multiprocessing.cpu_count()
+
 def pick_samples_from_classes_evenly(class_counts, n_total_samples):
     # defining helper variables
     n_classes = len(class_counts)
@@ -194,3 +207,25 @@ def pick_samples_from_classes_evenly(class_counts, n_total_samples):
     class_samples = [class_samples[i] for i in range(n_classes)]
 
     return class_samples
+
+def argmax_top_n(a: np.array, n: int):
+    assert len(a.shape) == 1
+    assert len(a) >= n
+
+    ret_unsorted = np.argpartition(a, -n)[-n:]
+    ret = ret_unsorted[np.flip(np.argsort(a[ret_unsorted]))]
+
+    return ret
+
+def argmin_top_n(a: np.array, n: int):
+    return argmax_top_n(-a, n)
+
+def flatten_dict(dictionary, parent_key='', separator='.'):
+    flattened_dict = {}
+    for key, value in dictionary.items():
+        new_key = f"{parent_key}{separator}{key}" if parent_key else key
+        if isinstance(value, dict):
+            flattened_dict.update(flatten_dict(value, new_key, separator))
+        else:
+            flattened_dict[new_key] = value
+    return flattened_dict

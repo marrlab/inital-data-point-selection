@@ -1,0 +1,4 @@
+
+mode: kmeans
+criterium: closest 
+clusters: 100

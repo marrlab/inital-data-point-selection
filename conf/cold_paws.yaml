@@ -1,0 +1,9 @@
+
+defaults:
+  - _self_
+  - dataset: isic_smallest
+  - training: classifier_base
+  - wandb: cold_paws
+  - hydra: chdir
+
+use_scan_weights: false

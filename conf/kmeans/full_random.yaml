@@ -1,0 +1,4 @@
+
+mode: kmeans
+criterium: random 
+clusters: 1

@@ -5,6 +5,7 @@ training=""
 features=""
 dataset=""
 clusters=""
+criteria=""
 runs=5
 
 # Print help message
@@ -15,6 +16,7 @@ function print_help {
     echo "    -f|--features       Features config (mandatory)"
     echo "    -d|--dataset        Dataset name (mandatory)"
     echo "    -c|--clusters       Cluster options (mandatory)"
+    echo "    -a|--criteria       Criteria options (mandatory)"
     echo "    -r|--runs           Number of runs (default: 5)"
     echo "    -h|--help           Print this help message"
     exit 0
@@ -39,6 +41,10 @@ while [[ $# -gt 0 ]]; do
             clusters="$2"
             shift 2
             ;;
+        -a|--criteria)
+            criteria="$2"
+            shift 2
+            ;;
         -r|--runs)
             runs="$2"
             shift 2
@@ -54,7 +60,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Check mandatory arguments
-if [ -z "$training" ] || [ -z "$features" ] || [ -z "$dataset" ] || [ -z "$clusters" ]; then
+if [ -z "$training" ] || [ -z "$features" ] || [ -z "$dataset" ] || [ -z "$clusters" ] || [ -z "$criteria" ]; then
     echo "Error: Mandatory arguments not provided"
     print_help
 fi
@@ -64,19 +70,11 @@ echo "Training config: $training"
 echo "Features config: $features"
 echo "Dataset: $dataset"
 echo "Cluster options: $clusters"
+echo "Criteria options: $criteria"
 echo "Number of runs: $runs"
 
 # The actual script
 for i in $(seq 1 $runs); do
-    # random baseline
-    python -m tasks.training.badge_sampling \
-        dataset=$dataset \
-        training=$training \
-        features=$features \
-        kmeans.clusters=1 \
-        kmeans.mode=kmeans++ \
-        kmeans.criterium=random
-
     # badge sampling
     python -m tasks.training.badge_sampling \
         --multirun \
@@ -85,5 +83,7 @@ for i in $(seq 1 $runs); do
         features=$features \
         kmeans.clusters=$clusters \
         kmeans.mode=kmeans \
-        kmeans.criterium=random,closest,furthest,half_in_half
+        kmeans.criterium=$criteria
 done
+
+# random,closest,furthest,half_in_half,fps

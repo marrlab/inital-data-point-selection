@@ -1,0 +1,8 @@
+
+defaults:
+  - _self_
+  - dataset: isic_smallest
+  - training: classifier_base
+  - hydra: chdir
+
+neighbors: 20

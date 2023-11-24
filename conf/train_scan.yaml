@@ -1,0 +1,8 @@
+
+defaults:
+  - _self_
+  - dataset: isic_smallest
+  - training: scan_base
+  - wandb: train_scan
+  - hydra: chdir
+  - scan: base

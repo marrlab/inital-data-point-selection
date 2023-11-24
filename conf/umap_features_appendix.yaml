@@ -1,0 +1,14 @@
+
+defaults:
+  - _self_
+  - dataset: isic_smallest
+  - training: classifier_base
+  - features: base
+  - hydra: chdir
+
+use_scan_weights: false
+n_neighbors: null
+min_dist: null
+show_legend: True
+legend_loc: "upper left"
+set_title: False

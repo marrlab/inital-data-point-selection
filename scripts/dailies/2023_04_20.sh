@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
 python -m tasks.datasets.download -d matek -d isic -d retinopathy -d jurkat -d cifar10

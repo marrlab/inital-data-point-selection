@@ -1,2 +1,4 @@
 
 name: retinopathy 
+input_size: 128
+num_classes: 5

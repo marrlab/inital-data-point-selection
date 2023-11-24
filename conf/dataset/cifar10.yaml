@@ -1,2 +1,4 @@
 
 name: cifar10 
+input_size: 32
+num_classes: 10

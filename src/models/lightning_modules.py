@@ -1,16 +1,14 @@
 
 import torch
-import torch.nn as nn
 import numpy as np
-import torchvision
 import lightning.pytorch as pl
 from torchmetrics.functional import accuracy, f1_score
-from sklearn.metrics import balanced_accuracy_score, matthews_corrcoef, cohen_kappa_score
-from src.utils.utils import flatten_tensor_dicts, map_tensor_values
+from sklearn.metrics import \
+    balanced_accuracy_score, matthews_corrcoef, cohen_kappa_score
+from src.utils.utils import flatten_tensor_dicts, map_tensor_values, map_tensor_probs
 from collections import defaultdict
-from lightly.data import LightlyDataset, SimCLRCollateFunction, collate
-from lightly.models.modules.heads import SimCLRProjectionHead
-from lightly.loss import NTXentLoss
+from lightly.utils.scheduler import CosineWarmupScheduler
+from torchmetrics.classification import AveragePrecision, AUROC
 
 
 class ImageClassifierLightningModule(pl.LightningModule):
@@ -51,30 +49,20 @@ class ImageClassifierLightningModule(pl.LightningModule):
     def _common_step(self, batch, batch_idx, step):
         images, classes, labels = batch['image'], batch['class'], batch['label']
 
-        assert images.ndim == 4
-
-        h, w = images.shape[2:]
-        assert h % 32 == 0 and w % 32 == 0
-
         logits = self(images)
+        prob_classes = torch.nn.functional.softmax(logits, dim=1)
         pred_classes = torch.argmax(logits, dim=1)
 
         loss = None
         if step == 'train':
             loss = self.loss(logits, classes)
 
-        # self.log(f'{step}_loss', loss)
-        # self.log(f'{step}_accuracy', accuracy(preds, labels,
-        #          task='multiclass', num_classes=self.num_classes))
-        # self.log(f'{step}_f1_macro', f1_score(
-        #     preds, labels, task='multiclass', num_classes=self.num_classes, average='macro'))
-        # self.log(f'{step}_f1_micro', f1_score(
-        #     preds, labels, task='multiclass', num_classes=self.num_classes, average='micro'))
-
         output = {
             'pred_classes': pred_classes,
-            'pred_labels': map_tensor_values(pred_classes, self.class_to_label_mapping),
+            'prob_classes': prob_classes,
             'classes': classes,
+            'pred_labels': map_tensor_values(pred_classes, self.class_to_label_mapping),
+            'prob_labels': map_tensor_probs(prob_classes, self.class_to_label_mapping, new_classes=self.num_labels),
             'labels': labels
         }
         if loss is not None:
@@ -111,22 +99,38 @@ class ImageClassifierLightningModule(pl.LightningModule):
         outputs = self.step_outputs[step]
         outputs = flatten_tensor_dicts(outputs)
 
+        # moving everything to cpu
+        for key in outputs:
+            outputs[key] = outputs[key].detach().cpu()
+
         if step == 'train':
             self.metrics_epoch_end[f'{step}_loss_epoch_end'].append(
-                torch.mean(outputs['loss']).detach().item())
+                torch.mean(outputs['loss']).item())
 
         self.metrics_epoch_end[f'{step}_accuracy_epoch_end'].append(accuracy(
-            outputs['pred_labels'], outputs['labels'], task='multiclass', num_classes=self.num_labels).detach().item())
+            outputs['pred_labels'], outputs['labels'], task='multiclass', num_classes=self.num_labels).item())
         self.metrics_epoch_end[f'{step}_f1_macro_epoch_end'].append(f1_score(
-            outputs['pred_labels'], outputs['labels'], task='multiclass', num_classes=self.num_labels, average='macro').detach().item())
+            outputs['pred_labels'], outputs['labels'], task='multiclass', num_classes=self.num_labels, average='macro').item())
         self.metrics_epoch_end[f'{step}_f1_micro_epoch_end'].append(f1_score(
-            outputs['pred_labels'], outputs['labels'], task='multiclass', num_classes=self.num_labels, average='micro').detach().item())
+            outputs['pred_labels'], outputs['labels'], task='multiclass', num_classes=self.num_labels, average='micro').item())
         self.metrics_epoch_end[f'{step}_balanced_accuracy_epoch_end'].append(
-            balanced_accuracy_score(outputs['labels'].cpu().numpy(), outputs['pred_labels'].cpu().numpy()))
+            balanced_accuracy_score(outputs['labels'].numpy(), outputs['pred_labels'].numpy()))
         self.metrics_epoch_end[f'{step}_matthews_corrcoef_epoch_end'].append(
-            matthews_corrcoef(outputs['labels'].cpu().numpy(), outputs['pred_labels'].cpu().numpy()))
+            matthews_corrcoef(outputs['labels'].numpy(), outputs['pred_labels'].numpy()))
         self.metrics_epoch_end[f'{step}_cohen_kappa_score_epoch_end'].append(
-            cohen_kappa_score(outputs['labels'].cpu().numpy(), outputs['pred_labels'].cpu().numpy()))
+            cohen_kappa_score(outputs['labels'].numpy(), outputs['pred_labels'].numpy()))
+
+        # so that we are sure that all the possible classes are contained here
+        if step == 'test':
+            # roc auc
+            roc_auc = AUROC(task='multiclass', num_classes=self.num_labels, average='macro')(
+                outputs['prob_labels'], outputs['labels'])
+            self.metrics_epoch_end[f'{step}_roc_auc_curve_epoch_end'].append(roc_auc)
+        
+            # pr auc
+            pr_auc = AveragePrecision(task='multiclass', num_classes=self.num_labels, average='macro')(
+                outputs['prob_labels'], outputs['labels'])
+            self.metrics_epoch_end[f'{step}_pr_auc_curve_epoch_end'].append(pr_auc)
 
         for key in self.metrics_epoch_end:
             # conversion needed due to float64 (double precision) not being supported in MPS
@@ -137,70 +141,17 @@ class ImageClassifierLightningModule(pl.LightningModule):
             self.log(f'{key}_min', np.min(values))
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=self.cfg.training.learning_rate)
+        # return torch.optim.Adam(self.parameters(), lr=self.cfg.training.learning_rate)
 
-
-class SimCLRModel(pl.LightningModule):
-    def __init__(self, cfg):
-        super().__init__()
-
-        self.cfg = cfg
-        
-        assert cfg.training.architecture in ('resnet18', 'resnet34')
-        assert cfg.training.weights.type in ('imagenet', 'simclr', None)
-
-        # create a ResNet backbone and remove the classification head
-        resnet = None
-        if cfg.training.architecture == 'resnet18':
-            if cfg.training.weights.type == 'imagenet':
-                resnet = torchvision.models.resnet18(
-                    weights=torchvision.models.ResNet18_Weights.IMAGENET1K_V1)
-            else:
-                resnet = torchvision.models.resnet18()
-        elif cfg.training.architecture == 'resnet34':
-            if cfg.training.weights.type == 'imagenet':
-                resnet = torchvision.models.resnet34(
-                    weights=torchvision.models.ResNet34_Weights.IMAGENET1K_V1)
-            else:
-                resnet = torchvision.models.resnet34()
-
-        self.backbone = nn.Sequential(*list(resnet.children())[:-1])
-
-        hidden_dim = resnet.fc.in_features
-        self.projection_head = SimCLRProjectionHead(
-            hidden_dim, hidden_dim, 128)
-
-        self.criterion = NTXentLoss()
-
-    def forward(self, x):
-        h = self.backbone(x).flatten(start_dim=1)
-        z = self.projection_head(h)
-
-        return z
-
-    def training_step(self, batch, batch_idx):
-        return self._common_step(batch, mode='train')
-
-    def validation_step(self, batch, batch_idx):
-        self._common_step(batch, mode='val')
-
-    def _common_step(self, batch, mode='train'):
-        (x0, x1), _, _ = batch
-        z0 = self.forward(x0)
-        z1 = self.forward(x1)
-        loss = self.criterion(z0, z1)
-
-        self.log(f'{mode}_loss_ssl', loss)
-
-        return loss
-
-    def configure_optimizers(self):
-        optim = torch.optim.SGD(
-            # TODO: connect learning rate to the config (might break the checkpointing)
-            self.parameters(), lr=self.cfg.training.learning_rate, momentum=0.9, weight_decay=5e-4
+        optimizer = torch.optim.SGD(
+            self.parameters(),
+            lr=self.cfg.training.learning_rate,
+            momentum=0.9,
+            weight_decay=0.0,
         )
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            optim, self.cfg.training.epochs
+            optimizer, 
+            self.cfg.training.epochs
         )
 
-        return [optim], [scheduler]
+        return [optimizer], [scheduler]

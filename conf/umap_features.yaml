@@ -2,8 +2,10 @@
 defaults:
   - _self_
   - dataset: isic_smallest
-  - features: test
+  - training: classifier_base
+  - features: base
   - hydra: chdir
 
+use_scan_weights: false
 n_neighbors_options: [10, 20, 50, 100]
 min_dist_options: [0.1, 0.25, 0.5, 0.8]

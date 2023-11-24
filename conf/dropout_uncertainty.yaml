@@ -1,0 +1,9 @@
+
+defaults:
+  - _self_
+  - dataset: isic_smallest
+  - training: classifier_base
+  - wandb: monte_carlo
+  - scan: base
+  - monte_carlo: base
+  - hydra: chdir

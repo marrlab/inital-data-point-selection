@@ -1,0 +1,8 @@
+
+defaults:
+  - _self_
+  - dataset: isic_smallest
+  - training: classifier_base
+  - scan: base
+
+use_scan_weights: false
