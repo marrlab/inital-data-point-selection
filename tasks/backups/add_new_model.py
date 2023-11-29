@@ -12,7 +12,7 @@ MODEL_FILE_NAME = 'model.ckpt'
 @click.option('--path', '-p', help='Path to the model checkpoint to add.', type=str)
 @click.option('--type', '-t', help='Weights type: (simclr, swav, dino).', type=click.Choice(['simclr', 'swav', 'dino']))
 @click.option('--version', '-v', help='Weights version, specifying the subfolder.', type=str)
-@click.option('--dataset', '-d', help='Dataset name, specifying the top folder', type=click.Choice(['cifar10', 'matek', 'isic', 'retinopathy', 'jurkat']))
+@click.option('--dataset', '-d', help='Dataset name, specifying the top folder', type=str)
 def main(path, type, version, dataset):
     model_folder_dst = os.path.join(
         MODELS_BACKUP_FOLDER,

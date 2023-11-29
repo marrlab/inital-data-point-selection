@@ -1,13 +1,18 @@
 
 import json
+import configparser
 from omegaconf import DictConfig, OmegaConf
 import wandb
 import pandas as pd
 from src.utils.utils import flatten_dict
 from src.vis.constants import CRITERIA_ORDER, HALF_IN_HALF_TRAIN_SAMPLES_TO_CLUSTERS 
 
+config = configparser.ConfigParser()
+config.read('config.ini')
+
 def login():
-    wandb.login(key='a29d7c338a594e427f18a0f1502e5a8f36e9adfb')
+    # wandb.login(key='a29d7c338a594e427f18a0f1502e5a8f36e9adfb')
+    wandb.login(key=config.get('wandb', 'api_key'))
 
 def init_run(cfg: DictConfig):
     login()
