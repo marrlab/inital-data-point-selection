@@ -140,4 +140,4 @@ multirun/
 # other
 .vscode/
 nohup.out
-
+config.ini
